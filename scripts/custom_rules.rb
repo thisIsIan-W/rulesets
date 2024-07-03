@@ -9,21 +9,21 @@ def get_current_time
     Time.now.strftime("%Y-%m-%d %H:%M:%S")
 end
 
-def write_custom_rules(configFile, logFile)
+def write_custom_rules(config_file, log_file)
     begin
-        value = YAML.load_file(configFile);
+        value = YAML.load_file(config_file);
     rescue Exception => e
-        File.open(logFile, "a") do |f|
-            f.puts "#{get_current_time} Error: YAML 加载 #{configFile} 出现异常，不再继续执行下去 ==>【#{e.message}】"
+        File.open(log_file, "a") do |f|
+            f.puts "#{get_current_time} Error: YAML 加载 #{config_file} 出现异常，不再继续执行下去 ==>【#{e.message}】"
         end
         return
     end
     
-    puts append_rules(value, logFile)
-    puts insert_rule_providers(configFile, value, logFile)
+    puts append_rules(value, log_file)
+    puts insert_rule_providers(config_file, value, log_file)
 end
 
-def append_rules(value, logFile)
+def append_rules(value, log_file)
     # 找到 rules 标签
     rules = value['rules']
 
@@ -49,7 +49,7 @@ def append_rules(value, logFile)
             begin
                 rules.insert(index + 1, priority_custom_rules)
             rescue Exception => e
-                File.open(logFile, "a") do |f|
+                File.open(log_file, "a") do |f|
                     f.puts "#{get_current_time} Error: 在 priority-custom-rules-tobe-inserted-by-IAN 后写入规则出现异常 ==>【#{e.message}】"
                 end
             ensure
@@ -60,7 +60,7 @@ def append_rules(value, logFile)
             begin
                 rules.insert(index + 1, extended_custom_rules)
             rescue Exception => e
-                File.open(logFile, "a") do |f|
+                File.open(log_file, "a") do |f|
                     f.puts "#{get_current_time} Error: 在 extended-custom-rules-tobe-inserted-by-IAN 后写入规则出现异常 ==>【#{e.message}】"
                 end
             ensure
@@ -71,7 +71,7 @@ def append_rules(value, logFile)
     end
 end
 
-def insert_rule_providers(configFile, value, logFile)
+def insert_rule_providers(config_file, value, log_file)
     # 追加 rule-providers
     rule_providers = {
         "rule-providers" => {
@@ -120,9 +120,9 @@ def insert_rule_providers(configFile, value, logFile)
         mutex.synchronize do
             begin
                 value['rule-providers'] = rule_providers
-                File.open(configFile, 'w') { |f| YAML.dump(value, f) }
+                File.open(config_file, 'w') { |f| YAML.dump(value, f) }
             rescue Exception => e
-                File.open(logFile, "a") do |f|
+                File.open(log_file, "a") do |f|
                     f.puts "#{get_current_time} Error: 新增 rule-providers 失败,【#{e.message}】"
                 end
             end

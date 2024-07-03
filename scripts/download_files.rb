@@ -13,12 +13,8 @@ end
 
 
 def download_by_system(target_directory, file_url)
-    wget_command = system("wget -P #{target_directory} #{file_url}")
-    if system(wget_command)
-        return true
-    else
-        return false
-    end
+    flag = system("wget -P #{target_directory} #{file_url}")
+    return flag
 end
 
 def download_rules(config_file, log_file, filename, target_directory)
@@ -31,11 +27,11 @@ def download_rules(config_file, log_file, filename, target_directory)
     ]
 
     download_count = 0
-    save_path = target_directory + "/" + filename
     mirror_urls.each do |url|
         begin
             file_url = url + filename
-            if download_by_system(target_directory, file_url)
+            flag = download_by_system(target_directory, file_url)
+            if flag
                 File.open(log_file, "a") do |f|
                     f.puts "#{get_current_time} info: 下载 #{filename} 成功！"
                 end
@@ -59,12 +55,25 @@ def download_rules(config_file, log_file, filename, target_directory)
         return false
     end
 
+    save_path = target_directory + "/" + filename
+    File.open(log_file, "a") do |f|
+        f.puts "#{get_current_time} save_path ====> #{save_path}"
+    end
     if File.extname(save_path).downcase == '.rb'
+        File.open(log_file, "a") do |f|
+            f.puts "#{get_current_time} 准备加载 #{save_path} 文件"
+        end
         # 加载并执行下载的 Ruby 文件
         load(save_path)
+        File.open(log_file, "a") do |f|
+            f.puts "#{get_current_time} 加载 #{save_path} 文件成功！！！"
+        end
 
         # 调用函数并传递参数
         if respond_to?("write_custom_rules")
+            File.open(log_file, "a") do |f|
+                f.puts "#{get_current_time} 准备调用 write_custom_rules 函数！！！"
+            end
             send("write_custom_rules", *[config_file, log_file])
         end
     else

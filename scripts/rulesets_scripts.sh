@@ -22,6 +22,30 @@ scripts_log() {
     echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >>$BASE_LOG_FILE
 }
 
+update_crontab() {
+    # 要检查和添加的 crontab 配置项数组
+    entries=(
+        "*/5 * * * * cd /etc/openclash/rule_provider && bash refresh_rules.sh 2>&1"
+        "0 3 * * * cd /etc/openclash/rule_provider && bash update_rules.sh 2>&1"
+    )
+
+    # 获取当前用户的 crontab
+    current_crontab=$(crontab -l 2>/dev/null)
+    update_required=false
+    for entry in "${entries[@]}"; do
+        if echo "$current_crontab" | grep -Fxq "$entry"; then
+            echo ""
+        else
+            current_crontab="$current_crontab"$'\n'"$entry"
+            update_required=true
+        fi
+    done
+    if [ "$update_required" = true ]; then
+        # 非交互方式更新 crontab
+        echo "$current_crontab" | crontab -
+    fi
+}
+
 download_extra_scripts_from_cdns() {
     local download_url
     local download_dir
@@ -56,9 +80,7 @@ download_extra_scripts_from_cdns() {
         fi
     done
 
-    # 全部下载成功，加入到cron脚本中
-    echo "*/5 * * * * cd /etc/openclash/rule_provider && bash refresh_rules.sh 2>&1" >> /etc/crontabs/root
-    echo "0 3 * * * cd /etc/openclash/rule_provider && bash update_rules.sh 2>&1" >> /etc/crontabs/root
+    update_crontab
 
     # 执行后续逻辑
     bash $SCRIPTS_DOWNLOAD_DIR/update_rules.sh

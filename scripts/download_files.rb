@@ -5,6 +5,9 @@ def get_current_time
 end
 
 def download_all(config_file, log_file)
+    File.open(log_file, "a") do |f|
+        f.puts "#{get_current_time} config_file =====> #{config_file}"
+    end
     flag = download_rules(config_file, log_file, 'custom_rules.rb', '/etc/openclash')
     if flag
         download_rules(config_file, log_file, 'rulesets_scripts.sh', '/etc/openclash/rule-provider')
@@ -19,11 +22,11 @@ end
 
 def download_rules(config_file, log_file, filename, target_directory)
     mirror_urls = [
+        'https://raw.githubusercontent.com/thisIsIan-W/rulesets/release/scripts/',
         'https://testingcf.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
         'https://fastly.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
         'https://gcore.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
-        'https://cdn.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
-        'https://raw.githubusercontent.com/thisIsIan-W/rulesets/release/scripts/'
+        'https://cdn.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/'
     ]
 
     download_count = 0
@@ -56,9 +59,6 @@ def download_rules(config_file, log_file, filename, target_directory)
     end
 
     save_path = target_directory + "/" + filename
-    File.open(log_file, "a") do |f|
-        f.puts "#{get_current_time} save_path ====> #{save_path}"
-    end
     if File.extname(save_path).downcase == '.rb'
         File.open(log_file, "a") do |f|
             f.puts "#{get_current_time} 准备加载 #{save_path} 文件"

@@ -1,9 +1,5 @@
 # 本脚本用于覆写 rule-provider 配置
-
-# 添加目标目录到加载路径
-$LOAD_PATH.unshift('/usr/share/openclash')
-# 导入 YAML 文件
-require 'YAML'
+require 'yaml'
 
 def get_current_time
     Time.now.strftime("%Y-%m-%d %H:%M:%S")
@@ -19,8 +15,8 @@ def write_custom_rules(config_file, log_file)
         return
     end
     
-    puts append_rules(value, log_file)
-    puts insert_rule_providers(config_file, value, log_file)
+    append_rules(value, log_file)
+    insert_rule_providers(config_file, value, log_file)
 end
 
 def append_rules(value, log_file)

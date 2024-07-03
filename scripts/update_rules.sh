@@ -142,37 +142,6 @@ do_push() {
         PUSH_MSG+=" 下载失败，跳过更新\n"
     fi
     PUSH_MSG+=" 操作总耗时：$duration s."
-
-    local bark_secrets_file="$BASE_DIR/bark_secrets.txt"
-    local deviceKey
-    local key
-    local iv
-    if [ ! -f "$bark_secrets_file" ]; then
-        logger "Warning: 请在 $BASE_DIR 目录下定义 bark_secrets.txt 并参考 https://bark.day.app/#/encryption 分别以新行指定 deviceKey=?、key=?、iv=? 三个参数，否则推送将不生效！"
-        exit
-    else
-        # 声明关联数组（哈希表）
-        declare -A hash
-
-        while IFS='=' read -r key value; do
-            # 跳过空行和以 # 开头的注释行
-            if [[ -n "$key" && ! "$key" =~ ^\s*# ]]; then
-                # 去除行末的换行符
-                value="${value%"${value##*[![:space:]]}"}"
-                hash["$key"]="$value"
-            fi
-        done < "$bark_secrets_file"
-
-        deviceKey=${hash["deviceKey"]}
-        key=${hash["key"]}
-        iv=${hash["iv"]}
-
-        logger "deviceKey=${deviceKey}, key=${key}, iv=${iv}"
-        if [ -z "${deviceKey}" ] || [ -z "${key}" ] || [ -z "${iv}" ]; then
-            logger "Warning: 请在 $BASE_DIR 目录下定义 bark_secrets.txt 并参考 https://bark.day.app/#/encryption 分别以新行指定 deviceKey=?、key=?、iv=? 三个参数，否则推送将不生效！"
-            exit
-        fi
-    fi
     push_notification "更新 openclash 第三方规则集结果" "$PUSH_MSG" "$deviceKey" "$key" "$iv"
 }
 

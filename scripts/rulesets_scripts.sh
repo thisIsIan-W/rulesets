@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # 本脚本用于下载自定义及第三方规则集
-
-OPENCLASH_LOGFILE=$1
+BASE_DIR="/etc/openclash/rule_provider"
+BASE_LOG_FILE="$BASE_DIR/download_and_refresh.log"
 SCRIPTS_DOWNLOADING_BACKUP_URLS=(
     "https://raw.githubusercontent.com/thisIsIan-W/rulesets/release/scripts"
     "https://testingcf.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts"
@@ -19,7 +19,7 @@ SCRIPT_NAMES=(
 SCRIPTS_DOWNLOAD_DIR="/etc/openclash/rule_provider"
 
 scripts_log() {
-    echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >>$OPENCLASH_LOGFILE
+    echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >>$BASE_LOG_FILE
 }
 
 download_extra_scripts_from_cdns() {

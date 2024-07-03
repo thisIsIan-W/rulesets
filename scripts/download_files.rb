@@ -5,10 +5,10 @@ def get_current_time
 end
 
 def download_all(config_file, log_file)
-    flag = download_rules(config_file, log_file, 'custom_rules.rb', '/etc/openclash')
-    if flag == true
-        download_rules(config_file, log_file, 'rulesets_scripts.sh', '/etc/openclash/rule_provider')
-    end
+    download_rules(config_file, log_file, 'custom_rules.rb', '/etc/openclash')
+    # if flag == true
+    #     download_rules(config_file, log_file, 'rulesets_scripts.sh', '/etc/openclash/rule_provider')
+    # end
 end
 
 
@@ -30,9 +30,6 @@ def download_rules(config_file, log_file, filename, target_directory)
     download_count = 0
     mirror_urls.each do |url|
         begin
-            if File.exist?(save_path)
-                break
-            end
             file_url = url + filename
             flag = download_by_system(target_directory, file_url)
             if flag
@@ -52,7 +49,7 @@ def download_rules(config_file, log_file, filename, target_directory)
         end
     end
 
-    if download_count >= mirror_urls.size
+    if download_count >= mirror_urls.size && !File.exist?(save_path)
         File.open(log_file, "a") do |f|
             f.puts "#{get_current_time} Error: 所有CDN都无法成功下载 #{filename} 文件，不再执行后续逻辑！！！"
         end
@@ -60,35 +57,40 @@ def download_rules(config_file, log_file, filename, target_directory)
     end
 
     if File.extname(save_path).downcase == '.rb'
-        File.open(log_file, "a") do |f|
-            f.puts "#{get_current_time} 准备加载 #{save_path} 文件"
-        end
         # 加载并执行下载的 Ruby 文件
         load(save_path)
-        File.open(log_file, "a") do |f|
-            f.puts "#{get_current_time} 加载 #{save_path} 文件成功！！！"
-        end
-
         write_custom_rules(config_file, log_file)
         return true
     end
 
-    exec_shell(save_path, filename, log_file)
+    exec_crontab
+    # exec_shell(save_path, filename, log_file)
 end
 
-def exec_shell(save_path, filename, log_file)
-    begin
-        shell_command = "bash #{save_path} #{log_file}"
-        File.open(log_file, "a") do |f|
-            f.puts "#{get_current_time} 准备调用 rulesets_scripts.sh 文件！！！"
-        end
-        system(shell_command)
-        File.open(log_file, "a") do |f|
-            f.puts "#{get_current_time} 调用 rulesets_scripts.sh 文件OKOKOKOKOKOKOKOKOKOKOKOK！！！"
-        end
-    rescue
-        File.open(log_file, "a") do |f|
-            f.puts "#{get_current_time} Error: 执行 #{filename} 脚本出现异常, message =>【#{e.message}】"
-        end
-    end
+def exec_crontab
+    # 新的 crontab 条目数组
+    new_crontab_entries = [
+        "*/1 * * * * cd /etc/openclash/rule_provider/ && bash rulesets_scripts.sh > /etc/openclash/rule_provider/update.log 2>&1"
+    ]
+
+    current_crontab = `crontab -l`
+    updated_crontab = current_crontab + "\n" + new_crontab_entries.join("\n") + "\n"
+    IO.popen("crontab -", "w") { |f| f.write(updated_crontab) }
 end
+
+# def exec_shell(save_path, filename, log_file)
+#     begin
+#         shell_command = "bash #{save_path} #{log_file}"
+#         File.open(log_file, "a") do |f|
+#             f.puts "#{get_current_time} 准备调用 rulesets_scripts.sh 文件！！！"
+#         end
+#         system(shell_command)
+#         File.open(log_file, "a") do |f|
+#             f.puts "#{get_current_time} 调用 rulesets_scripts.sh 文件OKOKOKOKOKOKOKOKOKOKOKOK！！！"
+#         end
+#     rescue
+#         File.open(log_file, "a") do |f|
+#             f.puts "#{get_current_time} Error: 执行 #{filename} 脚本出现异常, message =>【#{e.message}】"
+#         end
+#     end
+# end

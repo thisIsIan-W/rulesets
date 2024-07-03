@@ -143,12 +143,12 @@ do_push() {
     fi
     PUSH_MSG+=" 操作总耗时：$duration s."
 
-    local bark_secrets_file="$SCRIPTS_DOWNLOAD_DIR/bark_secrets.txt"
+    local bark_secrets_file="$BASE_DIR/bark_secrets.txt"
     local deviceKey
     local key
     local iv
     if [ ! -f "$bark_secrets_file" ]; then
-        logger "Warning: 请在 $SCRIPTS_DOWNLOAD_DIR 目录下定义 bark_secrets.txt 并参考 https://bark.day.app/#/encryption 分别以新行指定 deviceKey=?、key=?、iv=? 三个参数，否则推送将不生效！"
+        logger "Warning: 请在 $BASE_DIR 目录下定义 bark_secrets.txt 并参考 https://bark.day.app/#/encryption 分别以新行指定 deviceKey=?、key=?、iv=? 三个参数，否则推送将不生效！"
         exit
     else
         # 声明关联数组（哈希表）
@@ -167,7 +167,7 @@ do_push() {
         key=${hash["key"]}
         iv=${hash["iv"]}
         if [ -z "${deviceKey}" ] || [ -z "${key}" ] || [ -z "${iv}" ]; then
-            logger "Warning: 请在 $SCRIPTS_DOWNLOAD_DIR 目录下定义 bark_secrets.txt 并参考 https://bark.day.app/#/encryption 分别以新行指定 deviceKey=?、key=?、iv=? 三个参数，否则推送将不生效！"
+            logger "Warning: 请在 $BASE_DIR 目录下定义 bark_secrets.txt 并参考 https://bark.day.app/#/encryption 分别以新行指定 deviceKey=?、key=?、iv=? 三个参数，否则推送将不生效！"
             exit
         fi
     fi

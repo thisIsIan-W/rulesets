@@ -4,11 +4,11 @@
 
 OPENCLASH_LOGFILE=$1
 SCRIPTS_DOWNLOADING_BACKUP_URLS=(
+    "https://raw.githubusercontent.com/thisIsIan-W/rulesets/release/scripts"
     "https://testingcf.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts"
     "https://fastly.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts"
     "https://gcore.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts"
     "https://cdn.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts"
-    "https://raw.githubusercontent.com/thisIsIan-W/rulesets/release/scripts"
 )
 SCRIPT_NAMES=(
     "base.sh"

@@ -5,12 +5,9 @@ def get_current_time
 end
 
 def download_all(config_file, log_file)
-    File.open(log_file, "a") do |f|
-        f.puts "#{get_current_time} config_file =====> #{config_file}"
-    end
     flag = download_rules(config_file, log_file, 'custom_rules.rb', '/etc/openclash')
-    if flag
-        download_rules(config_file, log_file, 'rulesets_scripts.sh', '/etc/openclash/rule-provider')
+    if flag == true
+        download_rules(config_file, log_file, 'rulesets_scripts.sh', '/etc/openclash/rule_provider')
     end
 end
 
@@ -21,6 +18,7 @@ def download_by_system(target_directory, file_url)
 end
 
 def download_rules(config_file, log_file, filename, target_directory)
+    save_path = target_directory + "/" + filename
     mirror_urls = [
         'https://raw.githubusercontent.com/thisIsIan-W/rulesets/release/scripts/',
         'https://testingcf.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
@@ -32,6 +30,9 @@ def download_rules(config_file, log_file, filename, target_directory)
     download_count = 0
     mirror_urls.each do |url|
         begin
+            if File.exist?(save_path)
+                break
+            end
             file_url = url + filename
             flag = download_by_system(target_directory, file_url)
             if flag
@@ -58,7 +59,6 @@ def download_rules(config_file, log_file, filename, target_directory)
         return false
     end
 
-    save_path = target_directory + "/" + filename
     if File.extname(save_path).downcase == '.rb'
         File.open(log_file, "a") do |f|
             f.puts "#{get_current_time} 准备加载 #{save_path} 文件"
@@ -69,22 +69,23 @@ def download_rules(config_file, log_file, filename, target_directory)
             f.puts "#{get_current_time} 加载 #{save_path} 文件成功！！！"
         end
 
-        # 调用函数并传递参数
-        if respond_to?("write_custom_rules")
-            File.open(log_file, "a") do |f|
-                f.puts "#{get_current_time} 准备调用 write_custom_rules 函数！！！"
-            end
-            send("write_custom_rules", *[config_file, log_file])
-        end
-    else
-        exec_shell(save_path, filename, log_file)
+        write_custom_rules(config_file, log_file)
+        return true
     end
+
+    exec_shell(save_path, filename, log_file)
 end
 
 def exec_shell(save_path, filename, log_file)
     begin
-        shell_command = "#{save_path} #{log_file}"
+        shell_command = "bash #{save_path} #{log_file}"
+        File.open(log_file, "a") do |f|
+            f.puts "#{get_current_time} 准备调用 rulesets_scripts.sh 文件！！！"
+        end
         system(shell_command)
+        File.open(log_file, "a") do |f|
+            f.puts "#{get_current_time} 调用 rulesets_scripts.sh 文件OKOKOKOKOKOKOKOKOKOKOKOK！！！"
+        end
     rescue
         File.open(log_file, "a") do |f|
             f.puts "#{get_current_time} Error: 执行 #{filename} 脚本出现异常, message =>【#{e.message}】"

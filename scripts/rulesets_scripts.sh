@@ -16,7 +16,7 @@ SCRIPT_NAMES=(
     "update_rules.sh"
     "refresh_rules.sh"
 )
-SCRIPTS_DOWNLOAD_DIR="/etc/openclash/rule-provider"
+SCRIPTS_DOWNLOAD_DIR="/etc/openclash/rule_provider"
 
 scripts_log() {
     echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >>$OPENCLASH_LOGFILE
@@ -37,7 +37,7 @@ download_extra_scripts_from_cdns() {
             download_url="${SCRIPTS_DOWNLOADING_BACKUP_URLS[$index]}/$script_name"
             download_dir="$SCRIPTS_DOWNLOAD_DIR/$script_name"
 
-            curl --connect-timeout 3 -sS -o "$download_dir" "$download_url"
+            curl -sS -o "$download_dir" "$download_url"
             download_exit_code=$?
             if [ $download_exit_code -eq 0 ]; then
                 break

@@ -166,6 +166,8 @@ do_push() {
         deviceKey=${hash["deviceKey"]}
         key=${hash["key"]}
         iv=${hash["iv"]}
+
+        logger "deviceKey=${deviceKey}, key=${key}, iv=${iv}"
         if [ -z "${deviceKey}" ] || [ -z "${key}" ] || [ -z "${iv}" ]; then
             logger "Warning: 请在 $BASE_DIR 目录下定义 bark_secrets.txt 并参考 https://bark.day.app/#/encryption 分别以新行指定 deviceKey=?、key=?、iv=? 三个参数，否则推送将不生效！"
             exit

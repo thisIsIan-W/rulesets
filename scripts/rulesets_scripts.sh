@@ -16,23 +16,6 @@ SCRIPT_NAMES=(
     "update_rules.sh"
     "refresh_rules.sh"
 )
-
-ruby -ryaml -rYAML -I "/usr/share/openclash" -E UTF-8 -r "/etc/openclash/download.rb" -e "
-    require './download.rb';
-    begin
-        Value = YAML.load_file('$CONFIG_FILE');
-    rescue Exception => e
-        puts '${LOGTIME} Error: Load File Failed,【' + e.message + '】';
-    end;
-
-    begin
-        write_custom_rules()
-    ensure
-        File.open('$CONFIG_FILE','w') {|f| YAML.dump(Value, f)};
-end" 2>/dev/null >> $LOG_FILE
-
-ruby -r "./download.rb" -e "download("$CONFIG_FILE", '$b', '$c')"    
-
 SCRIPTS_DOWNLOAD_DIR="/etc/openclash/rule-provider"
 
 scripts_log() {

@@ -4,22 +4,26 @@ def get_current_time
     Time.now.strftime("%Y-%m-%d %H:%M:%S")
 end
 
-def download_script(ConfigFile, LogFile)
-    mirror_urls = [
-        'https://testingcf.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/custom_rules.rb',
-        'https://fastly.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/custom_rules.rb',
-        'https://gcore.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/custom_rules.rb',
-        'https://cdn.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/custom_rules.rb',
-        'https://raw.githubusercontent.com/thisIsIan-W/rulesets/release/scripts/custom_rules.rb'
-    ]
+mirror_urls = [
+    'https://testingcf.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
+    'https://fastly.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
+    'https://gcore.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
+    'https://cdn.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
+    'https://raw.githubusercontent.com/thisIsIan-W/rulesets/release/scripts/'
+]
 
+def download_all(ConfigFile, LogFile)
+    download_rules(ConfigFile, LogFile, 'custom_rules.rb', '/etc/openclash')
+    download_rules(ConfigFile, LogFile, 'rulesets_scripts.sh', '/etc/openclash/rule-provider')
+end
+
+def download_rules(ConfigFile, LogFile, Filename, TargetDirectory)
     download_count = 0
-    download_target_directory = "/etc/openclash"
     save_path = ""
     mirror_urls.each do |url|
         begin
-            file_name = File.basename(url)
-            save_path = File.join(download_target_directory, file_name)
+            file_name = File.basename(url) + Filename
+            save_path = File.join(TargetDirectory, file_name)
 
             open(url, 'rb') do |file|
                 File.open(save_path, 'wb') do |f|
@@ -59,6 +63,6 @@ def download_script(ConfigFile, LogFile)
 
     # 调用函数并传递参数
     if respond_to?("write_custom_rules")
-        send("write_custom_rules", LogFile)
+        send("write_custom_rules", *[ConfigFile, LogFile])
     end
 end

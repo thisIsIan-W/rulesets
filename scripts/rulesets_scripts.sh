@@ -2,13 +2,10 @@
 
 # 本脚本用于下载自定义及第三方规则集
 BASE_DIR="/etc/openclash/rule_provider"
-BASE_LOG_FILE="$BASE_DIR/download_and_refresh.log"
+BASE_LOG_FILE="/tmp/openclash.log"
+OPENCLASH_LOG_FILE=$1
 SCRIPTS_DOWNLOADING_BACKUP_URLS=(
-    "https://raw.githubusercontent.com/thisIsIan-W/rulesets/release/scripts"
-    "https://testingcf.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts"
-    "https://fastly.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts"
-    "https://gcore.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts"
-    "https://cdn.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts"
+    "https://gitee.com/ian-w/xyz-toss/raw/master/scripts"
 )
 SCRIPT_NAMES=(
     "base.sh"
@@ -19,14 +16,14 @@ SCRIPT_NAMES=(
 SCRIPTS_DOWNLOAD_DIR="/etc/openclash/rule_provider"
 
 scripts_log() {
-    echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >>$BASE_LOG_FILE
+    echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$BASE_LOG_FILE
 }
 
 update_crontab() {
     # 要检查和添加的 crontab 配置项数组
     entries=(
         "*/5 * * * * cd /etc/openclash/rule_provider && bash refresh_rules.sh 2>&1"
-        "0 3 * * * cd /etc/openclash/rule_provider && bash update_rules.sh 2>&1"
+        "*/1 * * * cd /etc/openclash/rule_provider && bash update_rules.sh 2>&1"
     )
 
     # 获取当前用户的 crontab
@@ -56,6 +53,7 @@ download_extra_scripts_from_cdns() {
 
     for script_index in "${!SCRIPT_NAMES[@]}"; do
         script_name="${SCRIPT_NAMES[$script_index]}"
+        download_count=0
 
         for index in "${!SCRIPTS_DOWNLOADING_BACKUP_URLS[@]}"; do
             download_url="${SCRIPTS_DOWNLOADING_BACKUP_URLS[$index]}/$script_name"
@@ -72,18 +70,20 @@ download_extra_scripts_from_cdns() {
         done
 
         if [ $download_count -eq $cdn_count ]; then
-            scripts_log "Error: 从 $script_name 尝试从所有CDN下载失败，不再继续下载及执行后续自定义逻辑......"
+            scripts_log "Error: $script_name 尝试从所有CDN下载失败，不再继续下载及执行后续自定义逻辑......"
             exit
         else
-            chmod +x $download_dir
-            download_count=1
+            scripts_log "$script_name 下载成功！"
+            chmod +x $download_dir 2>/dev/null
         fi
     done
 
     update_crontab
 
     # 执行后续逻辑
-    bash $SCRIPTS_DOWNLOAD_DIR/update_rules.sh
+    scripts_log "准备调用 update_rules.sh......"
+    /bin/bash $SCRIPTS_DOWNLOAD_DIR/update_rules.sh $OPENCLASH_LOG_FILE > $SCRIPTS_DOWNLOAD_DIR/download_and_refresh.log 2>&1
+    scripts_log "调用 update_rules.sh 完成！"
 }
 
 download_extra_scripts_from_cdns

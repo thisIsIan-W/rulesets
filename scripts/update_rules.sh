@@ -1,7 +1,7 @@
 #!/bin/bash
-. $PWD/base.sh
-. $PWD/refresh_rules.sh
-. $PWD/bark.sh
+. /etc/openclash/rule_provider/base.sh
+. /etc/openclash/rule_provider/refresh_rules.sh
+. /etc/openclash/rule_provider/bark.sh
 
 ## FILES 和 TARGET_NAMES 的文件名称顺序必须一一对应！
 FILES=(
@@ -18,12 +18,17 @@ TARGET_NAMES=(
 PUSH_MSG="全部第三方规则集文件更新成功！"
 PUSH_MSG_INITAIL="$PUSH_MSG"
 
-# 清空之前的日志
-flush_log
-
 current_millis() {
     # iStoreOS 上的时间戳计算方式与普通linux发行版不一样
     echo $(($(date +%s%3N)))
+}
+
+do_push() {
+    if [ "$PUSH_MSG" != "$PUSH_MSG_INITAIL" ]; then
+        PUSH_MSG+=" 下载失败，跳过更新\n"
+    fi
+    PUSH_MSG+=" 操作总耗时：$duration s."
+    push_notification "更新 openclash 第三方规则集结果" "$PUSH_MSG"
 }
 
 do_download() {
@@ -59,11 +64,6 @@ exec_after_download() {
 
     local lines_after_update=$(count_file_lines "$current_file_path")
     logger "$current_target_name 修改前一共 $lines_before_update 行内容，修改后变为 $lines_after_update 行，总共删除了 $((lines_before_update - lines_after_update)) 行内容！"
-
-    do_refresh "${current_target_name%.*}"
-    do_push
-
-    logger "\n\n"
 }
 
 retry_different_urls() {
@@ -90,7 +90,8 @@ retry_different_urls() {
             break
         fi
 
-        logger "Error: ------重试地址: $cur_download_url 还是下载失败，换下一个URL再次重试！！！\n"
+        logger "Error: ------重试地址: $cur_download_url 下载失败，换下一个URL再次重试！！！\n"
+        openclash_logger "Error: ------重试地址: $cur_download_url 下载失败，换下一个URL再次重试！！！"
         retry_count=1
     done
     logger ""
@@ -125,6 +126,7 @@ download() {
             exec_after_download "$url" "$target_name" "$file_path"
         else
             logger "Error: -----------------------------: 文件 ${FILES[$index]} 所有链接全部重试完成但依旧下载失败，跳过它......\n\n\n\n"
+            openclash_logger "Error: -----------------------------: 文件 ${FILES[$index]} 所有链接全部重试完成但依旧下载失败，跳过它......"
             if [ "$PUSH_MSG" == "$PUSH_MSG_INITAIL" ]; then
                 PUSH_MSG=""
             fi
@@ -132,19 +134,21 @@ download() {
         fi
     done
 
+
+    refresh_manually
+    do_push
+
+    logger "\n\n"
+
     end_mills=$(current_millis)
     duration=$((end_mills - start_mills))
     logger "所有操作总耗时 $duration s！"
 }
 
-do_push() {
-    if [ "$PUSH_MSG" != "$PUSH_MSG_INITAIL" ]; then
-        PUSH_MSG+=" 下载失败，跳过更新\n"
-    fi
-    PUSH_MSG+=" 操作总耗时：$duration s."
-    push_notification "更新 openclash 第三方规则集结果" "$PUSH_MSG" "$deviceKey" "$key" "$iv"
-}
+flush_log
 
+logger "准备下载第三方规则集文件..."
 download
+logger "第三方规则集文件下载成功！"
 
 logger " 刷新所有自定义配置结束！"

@@ -1,4 +1,9 @@
 # 本脚本用于覆写 rule-provider 配置
+
+# 覆写设置 -- 开发者选项 -- exit语句前加入下面两行代码：
+# RUBY_FILE="/etc/openclash/rule_provider/scripts/custom_rules.rb"
+# /usr/bin/ruby -e "require '$RUBY_FILE'; write_custom_rules('$CONFIG_FILE', '$LOG_FILE')" > /etc/openclash/ruby.log 2>&1
+
 require 'yaml'
 
 def get_current_time
@@ -118,11 +123,15 @@ def insert_rule_providers(config_file, value, log_file)
                 end
                 value['rule-providers'] = rule_providers
                 File.open(log_file, "a") do |f|
-                    f.puts "#{get_current_time} 插入 rule_providers ======  OK!!!!!!!!!!"
+                    f.puts "#{get_current_time} 插入 rule_providers 成功！"
+                end
+
+                File.open(log_file, "a") do |f|
+                    f.puts "#{get_current_time} 准备导出 rule_providers..."
                 end
                 File.open(config_file, 'w') { |f| YAML.dump(value, f) }
                 File.open(log_file, "a") do |f|
-                    f.puts "#{get_current_time} 导出 rule_providers ====== OK!!!!!!!!!!"
+                    f.puts "#{get_current_time} 导出 rule_providers 成功！"
                 end
             rescue Exception => e
                 File.open(log_file, "a") do |f|

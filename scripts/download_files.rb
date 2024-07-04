@@ -5,26 +5,20 @@ def get_current_time
 end
 
 def download_all(config_file, log_file)
-    download_rules(config_file, log_file, 'custom_rules.rb', '/etc/openclash')
-    # if flag == true
-    #     download_rules(config_file, log_file, 'rulesets_scripts.sh', '/etc/openclash/rule_provider')
-    # end
+    flag = download_rules(config_file, log_file, 'custom_rules.rb', '/etc/openclash')
+    if flag == true
+        download_rules(config_file, log_file, 'rulesets_scripts.sh', '/etc/openclash/rule_provider')
+    end
 end
 
-
 def download_by_system(target_directory, file_url)
-    flag = system("wget -P #{target_directory} #{file_url}")
-    return flag
+    system("wget -P #{target_directory} #{file_url}")
 end
 
 def download_rules(config_file, log_file, filename, target_directory)
     save_path = target_directory + "/" + filename
     mirror_urls = [
-        'https://raw.githubusercontent.com/thisIsIan-W/rulesets/release/scripts/',
-        'https://testingcf.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
-        'https://fastly.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
-        'https://gcore.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/',
-        'https://cdn.jsdelivr.net/gh/thisIsIan-W/rulesets@release/scripts/'
+      'https://gitee.com/ian-w/xyz-toss/raw/master/scripts/'
     ]
 
     download_count = 0
@@ -36,20 +30,19 @@ def download_rules(config_file, log_file, filename, target_directory)
                 File.open(log_file, "a") do |f|
                     f.puts "#{get_current_time} info: 下载 #{filename} 成功！"
                 end
-                break        
+                break
             end
         rescue Exception => e
             # 如果下载失败，则捕获异常并输出错误信息并继续尝试下一个 URL
             File.open(log_file, "a") do |f|
                 f.puts "#{get_current_time} Error: 下载 #{filename} 出现异常, message =>【#{e.message}】"
             end
-            next
-        ensure
             download_count += 1
+            next
         end
     end
 
-    if download_count >= mirror_urls.size && !File.exist?(save_path)
+    if download_count >= mirror_urls.size
         File.open(log_file, "a") do |f|
             f.puts "#{get_current_time} Error: 所有CDN都无法成功下载 #{filename} 文件，不再执行后续逻辑！！！"
         end
@@ -60,37 +53,30 @@ def download_rules(config_file, log_file, filename, target_directory)
         # 加载并执行下载的 Ruby 文件
         load(save_path)
         write_custom_rules(config_file, log_file)
-        return true
+   # else
+   #     exec_shell(save_path, filename, log_file)
     end
-
-    exec_crontab
-    # exec_shell(save_path, filename, log_file)
+    return true
 end
 
-def exec_crontab
-    # 新的 crontab 条目数组
-    new_crontab_entries = [
-        "*/1 * * * * cd /etc/openclash/rule_provider/ && bash rulesets_scripts.sh > /etc/openclash/rule_provider/update.log 2>&1"
-    ]
+def exec_shell(save_path, filename, log_file)
+    begin
+        shell_command = "chmod +x #{save_path} 2>/dev/null"
+        system(shell_command)
+        
+        shell_command = "bash #{save_path} #{log_file}"
+        File.open(log_file, "a") do |f|
+            f.puts "#{get_current_time} 准备调用 #{filename} 脚本..."
+        end
 
-    current_crontab = `crontab -l`
-    updated_crontab = current_crontab + "\n" + new_crontab_entries.join("\n") + "\n"
-    IO.popen("crontab -", "w") { |f| f.write(updated_crontab) }
+        system(shell_command)
+
+        File.open(log_file, "a") do |f|
+            f.puts "#{get_current_time} 调用 #{filename} 脚本完成！"
+        end
+    rescue
+        File.open(log_file, "a") do |f|
+            f.puts "#{get_current_time} Error: 执行 #{filename} 脚本出现异常, message =>【#{e.message}】"
+        end
+    end
 end
-
-# def exec_shell(save_path, filename, log_file)
-#     begin
-#         shell_command = "bash #{save_path} #{log_file}"
-#         File.open(log_file, "a") do |f|
-#             f.puts "#{get_current_time} 准备调用 rulesets_scripts.sh 文件！！！"
-#         end
-#         system(shell_command)
-#         File.open(log_file, "a") do |f|
-#             f.puts "#{get_current_time} 调用 rulesets_scripts.sh 文件OKOKOKOKOKOKOKOKOKOKOKOK！！！"
-#         end
-#     rescue
-#         File.open(log_file, "a") do |f|
-#             f.puts "#{get_current_time} Error: 执行 #{filename} 脚本出现异常, message =>【#{e.message}】"
-#         end
-#     end
-# end

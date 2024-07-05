@@ -1,0 +1,44 @@
+name: Manage Release
+
+on:
+  push:
+    branches:
+      - main  # 监控的分支，可以修改为其他分支
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up GitHub CLI
+        uses: actions/setup-gh@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Delete old release and tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 删除旧的名为 'release' 的 release
+          gh release delete release -y || echo "No release named 'release' to delete"
+
+          # 删除本地标签
+          git tag -d release || echo "No local tag named 'release' to delete"
+
+          # 删除远程标签
+          git push origin :refs/tags/release || echo "No remote tag named 'release' to delete"
+
+      - name: Create new tag
+        run: |
+          echo "Creating new tag 'release'"
+          git tag release
+          git push origin release
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create release --title "release" --notes "Automated release for tag 'release'"

@@ -63,4 +63,4 @@ jobs:
         run: |
           REPO="${{ github.repository }}"
           echo "Creating new release"
-          gh release create release --title "release" --notes "Automated release for tag 'release'" --repo $REPO
+          gh release create release --title "release" --notes "自动为 tag 'release' 创建的 release！" --repo $REPO

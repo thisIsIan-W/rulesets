@@ -13,19 +13,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up GitHub CLI
-        uses: actions/setup-gh@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install GitHub CLI
+        run: |
+          # 下载并安装 GitHub CLI
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Configure GitHub CLI
+        run: |
+          # 配置 GitHub CLI 使用 GITHUB_TOKEN 进行身份验证
+          gh auth setup-git
+          gh auth status
 
       - name: Delete old release and tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          REPO="${{ github.repository }}"
+
           # 删除旧的名为 'release' 的 release
-          if gh release view release &>/dev/null; then
+          if gh release view release --repo $REPO &>/dev/null; then
             echo "Deleting existing release named 'release'"
-            gh release delete release -y --repo ${{ github.repository }} || echo "Failed to delete release 'release'"
+            gh release delete release -y --repo $REPO || echo "Failed to delete release 'release'"
           else
             echo "No release named 'release' found"
           fi
@@ -56,4 +65,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create release --title "release" --notes "Automated release for tag 'release'" --repo ${{ github.repository }}
+          gh release create release --title "release" --notes "Automated release for tag 'release'" --repo $REPO

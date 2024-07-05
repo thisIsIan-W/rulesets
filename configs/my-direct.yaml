@@ -17,7 +17,8 @@ payload:
   #- DOMAIN-SUFFIX,steamstatic.com
   - DOMAIN-SUFFIX,steamserver.net
   - DOMAIN-SUFFIX,test.steampowered.com
-  - DOMAIN-SUFFIX,api.steampowered.com
+  # 放到了 my-proxy 里
+  # - DOMAIN-SUFFIX,api.steampowered.com
   - DOMAIN-SUFFIX,insideruser.microsoft.com
   - DOMAIN-SUFFIX,update.microsoft.com
   - DOMAIN-SUFFIX,smartscreen.microsoft.com

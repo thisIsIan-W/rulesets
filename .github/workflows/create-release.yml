@@ -3,7 +3,7 @@ name: Manage Release
 on:
   push:
     branches:
-      - main  # 监控的分支，可以修改为其他分支
+      - main  # 监控的分支，可以根据实际情况修改
 
 jobs:
   release:
@@ -18,9 +18,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gh
 
+      - name: Set up GitHub CLI authentication
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
       - name: Delete old release and tag
         env:
-          GH_TOKEN: ${{ secrets.PAT_GITHUB }}  # 使用个人访问令牌
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub Actions 自动生成的令牌
         run: |
           REPO="${{ github.repository }}"
 
@@ -56,6 +59,6 @@ jobs:
 
       - name: Create release
         env:
-          GH_TOKEN: ${{ secrets.PAT_GITHUB }}  # 使用个人访问令牌
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub Actions 自动生成的令牌
         run: |
           gh release create release --title "release" --notes "Automated release for tag 'release'" --repo $REPO --token $GH_TOKEN

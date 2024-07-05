@@ -2,7 +2,7 @@
 
 # 覆写设置 -- 开发者选项 -- exit语句前加入下面两行代码：
 # RUBY_FILE="/etc/openclash/rule_provider/scripts/custom_rules.rb"
-# /usr/bin/ruby -e "require '$RUBY_FILE'; write_custom_rules('$CONFIG_FILE', '$LOG_FILE')" > /etc/openclash/ruby.log 2>&1
+# /usr/bin/ruby -e "require '$RUBY_FILE'; write_custom_rules('$CONFIG_FILE', '$LOG_FILE')" >> /tmp/openclash.log 2>&1
 
 require 'yaml'
 

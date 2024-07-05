@@ -2,28 +2,27 @@
 
 # 本脚本用于下载自定义及第三方规则集
 BASE_DIR="/etc/openclash/rule_provider"
-BASE_LOG_FILE="/tmp/openclash.log"
-OPENCLASH_LOG_FILE=$1
+BASE_LOG_FILE="/etc/openclash/rule_provider/update_rules.log"
+OPENCLASH_LOG_FILE="/tmp/openclash.log"
 SCRIPTS_DOWNLOADING_BACKUP_URLS=(
     "https://gitee.com/ian-w/xyz-toss/raw/master/scripts"
 )
 SCRIPT_NAMES=(
-    "base.sh"
-    "bark.sh"
     "update_rules.sh"
     "refresh_rules.sh"
 )
-SCRIPTS_DOWNLOAD_DIR="/etc/openclash/rule_provider"
+SCRIPTS_DOWNLOAD_DIR="/etc/openclash/rule_provider/scripts"
 
 scripts_log() {
     echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$BASE_LOG_FILE
+    echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$OPENCLASH_LOG_FILE
 }
 
 update_crontab() {
     # 要检查和添加的 crontab 配置项数组
     entries=(
-        "*/5 * * * * cd /etc/openclash/rule_provider && bash refresh_rules.sh 2>&1"
-        "*/1 * * * cd /etc/openclash/rule_provider && bash update_rules.sh 2>&1"
+        "*/5 * * * * cd /etc/openclash/rule_provider/scripts && bash refresh_rules.sh 2>&1"
+        "*/1 * * * * cd /etc/openclash/rule_provider/scripts && bash update_rules.sh 2>&1"
     )
 
     # 获取当前用户的 crontab
@@ -79,11 +78,6 @@ download_extra_scripts_from_cdns() {
     done
 
     update_crontab
-
-    # 执行后续逻辑
-    scripts_log "准备调用 update_rules.sh......"
-    /bin/bash $SCRIPTS_DOWNLOAD_DIR/update_rules.sh $OPENCLASH_LOG_FILE > $SCRIPTS_DOWNLOAD_DIR/download_and_refresh.log 2>&1
-    scripts_log "调用 update_rules.sh 完成！"
 }
 
 download_extra_scripts_from_cdns

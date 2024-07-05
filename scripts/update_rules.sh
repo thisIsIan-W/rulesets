@@ -94,27 +94,52 @@ exec_after_download() {
 }
 
 update_crontab() {
-    # 要检查和添加的 crontab 配置项数组
-    entries=(
-        "*/5 * * * * cd $BASE_SCRIPTS_DIR && bash refresh_rules.sh 2>&1"
-        "*/20 * * * * cd $BASE_SCRIPTS_DIR && bash update_rules.sh 2>&1"
+    new_crontab_rules=(
+        "*/1 * * * * cd $BASE_SCRIPTS_DIR && bash refresh_rules.sh 2>&1"
+        "0 7 * * * cd $BASE_SCRIPTS_DIR && bash update_rules.sh 2>&1"
     )
 
-    # 获取当前用户的 crontab
-    current_crontab=$(crontab -l 2>/dev/null)
-    update_required=false
-    for entry in "${entries[@]}"; do
-        if echo "$current_crontab" | grep -Fxq "$entry"; then
-            echo ""
-        else
-            current_crontab="$current_crontab"$'\n'"$entry"
-            update_required=true
-        fi
+    # 提取新的Crontab任务中的命令部分
+    for rule in "${new_crontab_rules[@]}"; do
+        new_commands+=("$(echo "$rule" | awk '{$1=$2=$3=$4=$5=""; print $0}' | sed 's/^ //')")
     done
-    if [ "$update_required" = true ]; then
-        # 非交互方式更新 crontab
-        echo "$current_crontab" | crontab -
-    fi
+
+    # 创建临时文件来存放Crontab任务
+    current_crontab_file=$(mktemp)
+    updated_crontab_file=$(mktemp)
+
+    # 获取当前的Crontab任务
+    crontab -l >"$current_crontab_file"
+
+    while IFS= read -r line; do
+        # 提取当前任务的命令部分
+        current_command=$(echo "$line" | awk '{$1=$2=$3=$4=$5=""; print $0}' | sed 's/^ //')
+
+        match_found=false
+        for command in "${new_commands[@]}"; do
+            if [[ "$current_command" == "$command" ]]; then
+                match_found=true
+                logger "原有的定时任务 ==> $line 将被替换！"
+                break
+            fi
+        done
+
+        # 如果没有匹配到新的任务，则将该行保留
+        if [ "$match_found" = false ]; then
+            echo "$line" >>"$updated_crontab_file"
+        fi
+    done <"$current_crontab_file"
+
+    for rule in "${new_crontab_rules[@]}"; do
+        echo "$rule" >>"$updated_crontab_file"
+    done
+
+    # 安装更新后的Crontab任务
+    crontab "$updated_crontab_file"
+
+    logger "新的Crontab任务列表 ==> \n\n$(crontab -l)\n\n"
+
+    rm -f "$current_crontab_file" "$updated_crontab_file"
 }
 
 append_err_msg() {

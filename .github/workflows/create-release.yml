@@ -29,7 +29,7 @@ jobs:
 
           # 删除旧的名为 'release' 的 release
           if gh release view release --repo $REPO &>/dev/null; then
-            echo "Deleting existing release named 'release'"
+            echo "删除之前创建的 release ===> 'release'"
             gh release delete release -y --repo $REPO || echo "Failed to delete release 'release'"
           else
             echo "No release named 'release' found"
@@ -37,7 +37,7 @@ jobs:
 
           # 删除本地标签
           if git show-ref --tags | grep -q 'refs/tags/release'; then
-            echo "Deleting local tag 'release'"
+            echo "删除本地 tag ===> 'release'"
             git tag -d release || echo "Failed to delete local tag 'release'"
           else
             echo "No local tag named 'release' found"
@@ -45,7 +45,7 @@ jobs:
 
           # 删除远程标签
           if git ls-remote --tags origin | grep -q 'refs/tags/release'; then
-            echo "Deleting remote tag 'release'"
+            echo "删除远程 tag ===> 'release'"
             git push origin :refs/tags/release || echo "Failed to delete remote tag 'release'"
           else
             echo "No remote tag named 'release' found"
@@ -53,7 +53,7 @@ jobs:
 
       - name: Create new tag
         run: |
-          echo "Creating new tag 'release'"
+          echo "创建新的tag==>release'"
           git tag release
           git push origin release
 
@@ -61,4 +61,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub Actions 自动生成的令牌
         run: |
+          REPO="${{ github.repository }}"
+          echo "Creating new release"
           gh release create release --title "release" --notes "Automated release for tag 'release'" --repo $REPO --token $GH_TOKEN

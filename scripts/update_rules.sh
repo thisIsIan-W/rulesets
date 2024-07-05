@@ -1,5 +1,6 @@
 #!/bin/bash
 BASE_DIR="/etc/openclash/rule_provider"
+BASE_SCRIPTS_DIR="/etc/openclash/rule_provider/scripts"
 BASE_LOG_FILE="/etc/openclash/rule_provider/update_rules.log"
 OPENCLASH_LOG_FILE="/tmp/openclash.log"
 
@@ -67,7 +68,6 @@ do_push() {
 exec_after_download() {
     local current_target_name=$1
     local current_file_path=$2
-
     local lines_before_update=$(count_file_lines "$current_file_path")
     if echo "$current_target_name" | grep -q "cidr"; then
         sed -i '1b; /:/d' "$current_file_path"
@@ -90,8 +90,8 @@ exec_after_download() {
 update_crontab() {
     # 要检查和添加的 crontab 配置项数组
     entries=(
-        "*/5 * * * * cd /etc/openclash/rule_provider/scripts && bash refresh_rules.sh 2>&1"
-        "*/20 * * * * cd /etc/openclash/rule_provider/scripts && bash update_rules.sh 2>&1"
+        "*/5 * * * * cd $BASE_SCRIPTS_DIR && bash refresh_rules.sh 2>&1"
+        "*/20 * * * * cd $BASE_SCRIPTS_DIR && bash update_rules.sh 2>&1"
     )
 
     # 获取当前用户的 crontab
@@ -149,9 +149,18 @@ download() {
     local download_exit_code=0
     local retry_count=0
     for index in "${!FILES[@]}"; do
-        for idx in "${!RULE_DOWNLOADING_URLS[@]}"; do
-            download_exit_code=$(do_download "${RULE_DOWNLOADING_URLS[$idx]}" "${FILES[$index]}")
+        for idx in "${!RULE_DOWNLOADING_URLS[@]}"; do     
+            current_file_name="${FILES[$index]}"
+            download_exit_code=$(do_download "${RULE_DOWNLOADING_URLS[$idx]}" "$current_file_name")
             if [ $download_exit_code -eq 0 ]; then
+                ruby $BASE_SCRIPTS_DIR/validate_yaml.rb "$BASE_DIR/${current_file_name%.txt}.yaml" "$BASE_LOG_FILE"
+                if [ ! $? -eq 0 ]; then
+                    rm "$BASE_DIR/${current_file_name%.txt}.yaml"
+                    logger "$current_target_name 文件格式校验失败，可能是下载时出了异常，准备重新下载！"
+                    retry_count+=1
+                    continue
+                fi
+                
                 logger "${RULE_DOWNLOADING_URLS[$idx]}/${FILES[$index]} 已成功下载到本地！"
                 retry_count=0
                 break
@@ -173,6 +182,15 @@ download() {
         for ix in "${!MY_RULE_DOWNLOADING_URLS[@]}"; do
             download_exit_code=$(do_download "${MY_RULE_DOWNLOADING_URLS[$ix]}" "${MY_FILES[$i]}" "my")
             if [ $download_exit_code -eq 0 ]; then
+
+                ruby $BASE_SCRIPTS_DIR/validate_yaml.rb "$BASE_DIR/${MY_FILES[$i]}" "$BASE_LOG_FILE"
+                if [ ! $? -eq 0 ]; then
+                    rm "$BASE_DIR/${MY_FILES[$i]}"
+                    logger "$BASE_DIR/${MY_FILES[$i]} 文件格式校验失败，可能是下载时出了异常，准备重新下载！"
+                    retry_count+=1
+                    continue
+                fi
+
                 logger "${MY_RULE_DOWNLOADING_URLS[$ix]}/${MY_FILES[$i]} 已成功下载到本地！\n"
                 retry_count=0
                 break
@@ -181,8 +199,8 @@ download() {
         done
 
         if [ ! $retry_count -eq 0 ]; then
-            logger "Error: -----------------------------: 文件 ${FILES[$i]} 所有链接全部重试完成但依旧下载失败，跳过它......\n\n\n\n"
-            append_err_msg "${FILES[$i]}"
+            logger "Error: -----------------------------: 文件 ${MY_FILES[$i]} 所有链接全部重试完成但依旧下载失败，跳过它......\n\n\n\n"
+            append_err_msg "${MY_FILES[$i]}"
         fi
     done
 
@@ -201,7 +219,7 @@ entrance() {
         PUSH_MSG+=" 下载失败，跳过更新\n"
     fi
 
-    bash $BASE_DIR/scripts/refresh_rules.sh
+    bash $BASE_SCRIPTS_DIR/refresh_rules.sh
 
     end_mills=$(current_millis)
     duration=$((end_mills - start_mills))

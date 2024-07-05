@@ -20,7 +20,7 @@ jobs:
 
       - name: Delete old release and tag
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_GITHUB }}  # 使用个人访问令牌
         run: |
           REPO="${{ github.repository }}"
 
@@ -56,6 +56,6 @@ jobs:
 
       - name: Create release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_GITHUB }}  # 使用个人访问令牌
         run: |
-          gh release create release --title "release" --notes "Automated release for tag 'release'" --repo $REPO
+          gh release create release --title "release" --notes "Automated release for tag 'release'" --repo $REPO --token $GH_TOKEN

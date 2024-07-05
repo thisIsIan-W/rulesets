@@ -15,15 +15,14 @@ jobs:
 
       - name: Install GitHub CLI
         run: |
-          # 下载并安装 GitHub CLI
           sudo apt-get update
           sudo apt-get install -y gh
 
-      - name: Configure GitHub CLI
+      - name: Authenticate with GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 配置 GitHub CLI 使用 GITHUB_TOKEN 进行身份验证
-          gh auth setup-git
-          gh auth status
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
       - name: Delete old release and tag
         env:

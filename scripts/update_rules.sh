@@ -1,4 +1,9 @@
 #!/bin/bash
+# 以下配置写入：覆写设置 => 开发者选项 => exit 0 之前粘贴以下两行：
+# 需要先把脚本文件保存在 /etc/openclash/rule_provider/scripts/ 文件夹下，并先执行 update_rules.sh 脚本(需要先连接上代理)
+# RUBY_FILE="/etc/openclash/rule_provider/scripts/custom_rules.rb"
+# /usr/bin/ruby -e "require '$RUBY_FILE'; write_custom_rules('$CONFIG_FILE', '$LOG_FILE')"
+
 BASE_DIR="/etc/openclash/rule_provider"
 BASE_SCRIPTS_DIR="/etc/openclash/rule_provider/scripts"
 BASE_LOG_FILE="/etc/openclash/rule_provider/update_rules.log"
@@ -150,7 +155,7 @@ download() {
     local download_exit_code=0
     local retry_count=0
     for index in "${!FILES[@]}"; do
-        for idx in "${!RULE_DOWNLOADING_URLS[@]}"; do     
+        for idx in "${!RULE_DOWNLOADING_URLS[@]}"; do
             current_file_name="${FILES[$index]}"
             download_exit_code=$(do_download "${RULE_DOWNLOADING_URLS[$idx]}" "$current_file_name")
             if [ $download_exit_code -eq 0 ]; then
@@ -161,7 +166,7 @@ download() {
                     retry_count+=1
                     continue
                 fi
-                
+
                 logger "${RULE_DOWNLOADING_URLS[$idx]}/${FILES[$index]} 已成功下载到本地！"
                 retry_count=0
                 break

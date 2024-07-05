@@ -17,19 +17,34 @@ jobs:
         uses: actions/setup-gh@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Delete old release and tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # 删除旧的名为 'release' 的 release
-          gh release delete release -y || echo "No release named 'release' to delete"
+          if gh release view release &>/dev/null; then
+            echo "Deleting existing release named 'release'"
+            gh release delete release -y --repo ${{ github.repository }} || echo "Failed to delete release 'release'"
+          else
+            echo "No release named 'release' found"
+          fi
 
           # 删除本地标签
-          git tag -d release || echo "No local tag named 'release' to delete"
+          if git show-ref --tags | grep -q 'refs/tags/release'; then
+            echo "Deleting local tag 'release'"
+            git tag -d release || echo "Failed to delete local tag 'release'"
+          else
+            echo "No local tag named 'release' found"
+          fi
 
           # 删除远程标签
-          git push origin :refs/tags/release || echo "No remote tag named 'release' to delete"
+          if git ls-remote --tags origin | grep -q 'refs/tags/release'; then
+            echo "Deleting remote tag 'release'"
+            git push origin :refs/tags/release || echo "Failed to delete remote tag 'release'"
+          else
+            echo "No remote tag named 'release' found"
+          fi
 
       - name: Create new tag
         run: |
@@ -41,4 +56,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create release --title "release" --notes "Automated release for tag 'release'"
+          gh release create release --title "release" --notes "Automated release for tag 'release'" --repo ${{ github.repository }}

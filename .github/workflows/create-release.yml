@@ -53,14 +53,14 @@ jobs:
 
       - name: Create new tag
         run: |
-          echo "创建新的tag==>release'"
+          echo "创建新的tag ===> release'"
           git tag release
           git push origin release
 
       - name: Create release
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub Actions 自动生成的令牌
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub Actions 自动生成的令牌
         run: |
           REPO="${{ github.repository }}"
           echo "Creating new release"
-          gh release create release --title "release" --notes "Automated release for tag 'release'" --repo $REPO --token $GH_TOKEN
+          gh release create release --title "release" --notes "Automated release for tag 'release'" --repo $REPO

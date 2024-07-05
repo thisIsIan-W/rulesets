@@ -33,6 +33,7 @@ def append_rules(value, config_file, log_file)
         'RULE-SET,my-proxy,PROXY_MANUAL',
         'RULE-SET,telegramcidr,PROXY_MANUAL,no-resolve',
         'RULE-SET,my-reject,REJECT',
+        'RULE-SET,reject,REJECT',
         'RULE-SET,cncidr,DIRECT,no-resolve'
     ]
     extended_custom_rules = [
@@ -93,6 +94,12 @@ def insert_rule_providers(config_file, value, log_file)
             "path" => "./rule_provider/cncidr.yaml",
             "format" => "yaml"
         },
+        "reject" => {
+            "type" => "file",
+            "behavior" => "classical",
+            "path" => "./rule_provider/reject.yaml",
+            "format" => "yaml"
+        },
         "my-direct" => {
             "type" => "file",
             "behavior" => "classical",
@@ -114,24 +121,14 @@ def insert_rule_providers(config_file, value, log_file)
     }
 
     Thread.new do
-        # 使用 Mutex 来确保线程安全
         mutex = Mutex.new
         mutex.synchronize do
             begin
-                File.open(log_file, "a") do |f|
-                    f.puts "#{get_current_time} 准备插入 rule_providers ====== "
-                end
                 value['rule-providers'] = rule_providers
-                File.open(log_file, "a") do |f|
-                    f.puts "#{get_current_time} 插入 rule_providers 成功！"
-                end
+                File.open(config_file, 'w') { |f| YAML.dump(value, f) }
 
                 File.open(log_file, "a") do |f|
-                    f.puts "#{get_current_time} 准备导出 rule_providers..."
-                end
-                File.open(config_file, 'w') { |f| YAML.dump(value, f) }
-                File.open(log_file, "a") do |f|
-                    f.puts "#{get_current_time} 导出 rule_providers 成功！"
+                    f.puts "#{get_current_time} ================ 导出所有 rule_providers 到配置文件中成功 ================"
                 end
             rescue Exception => e
                 File.open(log_file, "a") do |f|

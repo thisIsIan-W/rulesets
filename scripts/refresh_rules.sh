@@ -8,6 +8,7 @@ URLS_TO_BE_REFRESHED=(
   "${BASE_REFRESH_URL}telegramcidr"
   "${BASE_REFRESH_URL}cncidr"
   "${BASE_REFRESH_URL}direct"
+  "${BASE_REFRESH_URL}reject"
   "${BASE_REFRESH_URL}my-proxy"
   "${BASE_REFRESH_URL}my-direct"
   "${BASE_REFRESH_URL}my-reject"

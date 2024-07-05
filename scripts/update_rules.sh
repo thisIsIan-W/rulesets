@@ -16,6 +16,7 @@ FILES=(
     "telegramcidr.txt"
     "cncidr.txt"
     "direct.txt"
+    "reject.txt"
 )
 MY_RULE_DOWNLOADING_URLS=(
     "https://raw.githubusercontent.com/thisIsIan-W/rulesets/main/configs"

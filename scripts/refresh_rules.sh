@@ -7,7 +7,6 @@ URLS_TO_BE_REFRESHED=(
   # 此处内容需要与 update_rules.sh 文件中的 FILES 和 MY_FILES 数组一一对应，否则配置无法刷新！
   "${BASE_REFRESH_URL}telegramcidr"
   "${BASE_REFRESH_URL}cncidr"
-  "${BASE_REFRESH_URL}direct"
   "${BASE_REFRESH_URL}reject"
   "${BASE_REFRESH_URL}my-proxy"
   "${BASE_REFRESH_URL}my-direct"

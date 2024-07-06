@@ -5,9 +5,12 @@
 # /usr/bin/ruby -e "require '$RUBY_FILE'; write_custom_rules('$CONFIG_FILE', '$LOG_FILE')"
 
 BASE_DIR="/etc/openclash/rule_provider"
+TMP_RULESETS_FILE_DIRECTORY="$BASE_DIR/tmp"
 BASE_SCRIPTS_DIR="/etc/openclash/rule_provider/scripts"
 BASE_LOG_FILE="/etc/openclash/rule_provider/update_rules.log"
 OPENCLASH_LOG_FILE="/tmp/openclash.log"
+PUSH_MSG="全部第三方规则集文件更新成功！"
+PUSH_MSG_INITAIL="$PUSH_MSG"
 
 RULE_DOWNLOADING_URLS=(
     "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release"
@@ -20,7 +23,6 @@ FILES=(
     # 如果需要新增，先在此处新增，然后到 refresh_rules.sh 的 URLS_TO_BE_REFRESHED 数组里再次按格式新增
     "telegramcidr.txt"
     "cncidr.txt"
-    "direct.txt"
     "reject.txt"
 )
 MY_RULE_DOWNLOADING_URLS=(
@@ -48,10 +50,6 @@ logger() {
 flush_log() {
     echo -n "" >$BASE_LOG_FILE
 }
-
-PUSH_MSG="全部第三方规则集文件更新成功！"
-PUSH_MSG_INITAIL="$PUSH_MSG"
-
 current_millis() {
     echo $(($(date +%s%3N)))
 }
@@ -68,7 +66,7 @@ do_push() {
 
     ciphertext=$(echo -n $(printf '{"title": "%s", "body":"%s", "sound":"bell"}' "更新 openclash 第三方规则集结果" "$PUSH_MSG") |
         openssl enc -aes-128-cbc -K $(printf $key | xxd -ps -c 200) -iv $(printf $iv | xxd -ps -c 200) | base64 -w 0)
-    curl --data-urlencode "ciphertext=$ciphertext" --data-urlencode "iv=$iv" https://api.day.app/$deviceKey
+    curl --data-urlencode "ciphertext=$ciphertext" --data-urlencode "iv=$iv" https://api.day.app/$deviceKey >>$BASE_LOG_FILE $OPENCLASH_LOG_FILE 2>&1
 }
 
 exec_after_download() {
@@ -151,24 +149,48 @@ append_err_msg() {
 }
 
 do_download() {
-    local cur_url_to_download=$1
-    local cur_file_to_download=$2
+    local url=$1
+    local file_name=$2
     local my=$3
-    local cur_download_url="$cur_url_to_download/$cur_file_to_download"
-    local cur_target_name=$cur_file_to_download
+    local full_download_url="$url/$file_name"
+    local target_name=$file_name
     if [ -z "$my" ]; then
-        cur_target_name="${cur_file_to_download%.txt}.yaml"
+        target_name="${file_name%.txt}.yaml"
     fi
-    local cur_file_path="$BASE_DIR/$cur_target_name"
-
-    logger "准备从 $cur_download_url 下载到 $cur_file_path ..."
-
-    curl --retry 0 --connect-timeout 3 -sS -o "$cur_file_path" "$cur_download_url"
-    local download_exit_code=$?
-    if [ ! $download_exit_code -eq 0 ]; then
-        logger "Error: ------URL: $cur_download_url 下载失败"
+    if [ ! -d $TMP_RULESETS_FILE_DIRECTORY ]; then
+        mkdir $TMP_RULESETS_FILE_DIRECTORY 2>/dev/null
     fi
-    echo $download_exit_code
+
+    local file_path="$TMP_RULESETS_FILE_DIRECTORY/$target_name"
+    curl -sS -o "$file_path" "$full_download_url"
+    exit_code=$?
+    if [ ! $exit_code -eq 0 ]; then
+        logger "Error: ------URL: $full_download_url 下载失败, exit_code=$exit_code"
+    fi
+    echo $exit_code
+}
+
+is_validate_yaml() {
+    local file_name=$1
+    local ruby_file="$BASE_SCRIPTS_DIR/validate_yaml.rb"
+    local file_dir="$TMP_RULESETS_FILE_DIRECTORY/${file_name%.txt}.yaml"
+
+    ruby -e "
+        require '$ruby_file';
+        exit_code = 0;
+
+        result1 = is_first_line_payload('$file_dir', '$BASE_LOG_FILE');
+        exit_code = 1 if result1 == 1;
+        result2 = is_validate_yaml('$file_dir', '$BASE_LOG_FILE');
+        exit_code = 1 if result2 == 1;
+        
+        exit exit_code;
+    "
+    if [ ! $? -eq 0 ]; then
+        logger "$file_name 文件格式校验失败，可能是下载时出了异常，准备重新下载！"
+        return 1
+    fi
+    return 0
 }
 
 download() {
@@ -182,25 +204,27 @@ download() {
     for index in "${!FILES[@]}"; do
         for idx in "${!RULE_DOWNLOADING_URLS[@]}"; do
             current_file_name="${FILES[$index]}"
+            tmp_file_dir="$TMP_RULESETS_FILE_DIRECTORY/${current_file_name%.txt}.yaml"
+            file_dir="$BASE_DIR/${current_file_name%.txt}.yaml"
+
             download_exit_code=$(do_download "${RULE_DOWNLOADING_URLS[$idx]}" "$current_file_name")
             if [ $download_exit_code -eq 0 ]; then
-                ruby $BASE_SCRIPTS_DIR/validate_yaml.rb "$BASE_DIR/${current_file_name%.txt}.yaml" "$BASE_LOG_FILE"
-                if [ ! $? -eq 0 ]; then
-                    rm "$BASE_DIR/${current_file_name%.txt}.yaml"
-                    logger "$current_target_name 文件格式校验失败，可能是下载时出了异常，准备重新下载！"
-                    retry_count+=1
+                is_validate_yaml "$current_file_name" "$tmp_file_dir"
+                if [ $? -eq 1 ]; then
+                    rm "$tmp_file_dir" 2>/dev/null
+                    retry_count=$((retry_count + 1))
                     continue
                 fi
-
-                logger "${RULE_DOWNLOADING_URLS[$idx]}/${FILES[$index]} 已成功下载到本地！"
+                mv "$tmp_file_dir" "$file_dir" 2>/dev/null
+                logger "$current_file_name 已成功下载到本地 ==> $file_dir"
                 retry_count=0
                 break
             fi
-            retry_count+=1
+            retry_count=$((retry_count + 1))
         done
 
         if [ $retry_count -eq 0 ]; then
-            exec_after_download "${FILES[$index]%.txt}.yaml" "$BASE_DIR/${FILES[$index]%.txt}.yaml"
+            exec_after_download "${FILES[$index]%.txt}.yaml" "$file_dir"
         else
             logger "Error: -----------------------------: 文件 ${FILES[$index]} 所有链接全部重试完成但依旧下载失败，跳过它......\n\n\n\n"
             append_err_msg "${FILES[$index]}"
@@ -211,22 +235,23 @@ download() {
 
     for i in "${!MY_FILES[@]}"; do
         for ix in "${!MY_RULE_DOWNLOADING_URLS[@]}"; do
+            tmp_file_dir="$TMP_RULESETS_FILE_DIRECTORY/${MY_FILES[$i]}"
+            file_dir="$BASE_DIR/${MY_FILES[$i]}"
+
             download_exit_code=$(do_download "${MY_RULE_DOWNLOADING_URLS[$ix]}" "${MY_FILES[$i]}" "my")
             if [ $download_exit_code -eq 0 ]; then
-
-                ruby $BASE_SCRIPTS_DIR/validate_yaml.rb "$BASE_DIR/${MY_FILES[$i]}" "$BASE_LOG_FILE"
-                if [ ! $? -eq 0 ]; then
-                    rm "$BASE_DIR/${MY_FILES[$i]}"
-                    logger "$BASE_DIR/${MY_FILES[$i]} 文件格式校验失败，可能是下载时出了异常，准备重新下载！"
-                    retry_count+=1
+                is_validate_yaml "${MY_FILES[$i]}" "$tmp_file_dir"
+                if [ $? -eq 1 ]; then
+                    rm "$tmp_file_dir" 2>/dev/null
+                    retry_count=$((retry_count + 1))
                     continue
                 fi
-
-                logger "${MY_RULE_DOWNLOADING_URLS[$ix]}/${MY_FILES[$i]} 已成功下载到本地！\n"
+                mv "$tmp_file_dir" "$file_dir" 2>/dev/null
+                logger "${MY_FILES[$i]} 已成功下载到本地 ==> $file_dir\n"
                 retry_count=0
                 break
             fi
-            retry_count+=1
+            retry_count=$((retry_count + 1))
         done
 
         if [ ! $retry_count -eq 0 ]; then
@@ -235,6 +260,7 @@ download() {
         fi
     done
 
+    rm -rf "$TMP_RULESETS_FILE_DIRECTORY" 2>/dev/null
     logger "第三方规则集文件下载成功！"
 }
 

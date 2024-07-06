@@ -21,7 +21,7 @@ def append_rules(value, log_file)
   ]
   extended_custom_rules = [
     'RULE-SET,my-direct,DIRECT',
-    'RULE-SET,chinaIPs,DIRECT,no-resolve'
+    'RULE-SET,ChinaIPs_IP,DIRECT,no-resolve'
   ]
 
   # 分别找到2个标记位并在其后插入上述内容(已在github上新增)
@@ -59,10 +59,10 @@ end
 def insert_rule_providers(config_file, value, log_file)
   # 追加 rule-providers
   rule_providers = {
-    "chinaIPs" => {
+    "ChinaIPs_IP" => {
       "type" => "file",
-      "behavior" => "ipcidr",
-      "path" => "./rule_provider/ChinaIPs.yaml",
+      "behavior" => "classical",
+      "path" => "./rule_provider/ChinaIPs_IP.yaml",
       "format" => "yaml"
     },
     "my-proxy" => {

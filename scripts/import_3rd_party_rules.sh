@@ -73,6 +73,7 @@ exec_after_download() {
     local lines_before_update=$(count_file_lines "$file_full_dir")
 
     # yaml 文件使用通用替换函数进行替换
+    # 替换之后的 yaml behavior 就变成了 classical
     local is_valid_file=0
     if [ "$file_name" == *.yaml ]; then
         common_rules_replace "$file_full_dir"

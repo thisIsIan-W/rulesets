@@ -1,12 +1,10 @@
 #!/bin/bash
-BASE_LOG_FILE="/etc/openclash/rule_provider/update_rules.log"
+BASE_LOG_FILE="/etc/openclash/rule_provider/import_3rd_party_rules.log"
 OPENCLASH_LOG_FILE="/tmp/openclash.log"
 BASE_REFRESH_URL="http://127.0.0.1:$(uci -q get openclash.config.cn_port)/providers/rules/"
 BASE_DASHBOARD_AUTH_TOKEN="Authorization: Bearer $(uci -q get openclash.config.dashboard_password)"
 URLS_TO_BE_REFRESHED=(
-  # 此处内容需要与 update_rules.sh 文件中的 FILES 和 MY_FILES 数组一一对应，否则配置无法刷新！
-  "${BASE_REFRESH_URL}telegramcidr"
-  "${BASE_REFRESH_URL}cncidr"
+  "${BASE_REFRESH_URL}chinaIPs"
   "${BASE_REFRESH_URL}my-proxy"
   "${BASE_REFRESH_URL}my-direct"
   "${BASE_REFRESH_URL}my-reject"

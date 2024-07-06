@@ -17,12 +17,11 @@ def append_rules(value, log_file)
   # 追加新的配置
   priority_custom_rules = [
     'RULE-SET,my-proxy,PROXY_MANUAL',
-    'RULE-SET,telegramcidr,PROXY_MANUAL,no-resolve',
     'RULE-SET,my-reject,REJECT',
-    'RULE-SET,cncidr,DIRECT,no-resolve'
   ]
   extended_custom_rules = [
-    'RULE-SET,my-direct,DIRECT'
+    'RULE-SET,my-direct,DIRECT',
+    'RULE-SET,chinaIPs,DIRECT,no-resolve'
   ]
 
   # 分别找到2个标记位并在其后插入上述内容(已在github上新增)
@@ -60,22 +59,16 @@ end
 def insert_rule_providers(config_file, value, log_file)
   # 追加 rule-providers
   rule_providers = {
-    "telegramcidr" => {
+    "chinaIPs" => {
       "type" => "file",
       "behavior" => "ipcidr",
-      "path" => "./rule_provider/telegramcidr.yaml",
+      "path" => "./rule_provider/ChinaIPs.yaml",
       "format" => "yaml"
     },
     "my-proxy" => {
       "type" => "file",
       "behavior" => "classical",
       "path" => "./rule_provider/my-proxy.yaml",
-      "format" => "yaml"
-    },
-    "cncidr" => {
-      "type" => "file",
-      "behavior" => "ipcidr",
-      "path" => "./rule_provider/cncidr.yaml",
       "format" => "yaml"
     },
     "my-direct" => {

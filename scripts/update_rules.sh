@@ -95,7 +95,7 @@ exec_after_download() {
 
 update_crontab() {
     new_crontab_rules=(
-        "*/1 * * * * cd $BASE_SCRIPTS_DIR && bash refresh_rules.sh 2>&1"
+        "*/10 * * * * cd $BASE_SCRIPTS_DIR && bash refresh_rules.sh 2>&1"
         "0 7 * * * cd $BASE_SCRIPTS_DIR && bash update_rules.sh 2>&1"
     )
 

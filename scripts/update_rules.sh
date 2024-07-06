@@ -23,7 +23,6 @@ FILES=(
     # 如果需要新增，先在此处新增，然后到 refresh_rules.sh 的 URLS_TO_BE_REFRESHED 数组里再次按格式新增
     "telegramcidr.txt"
     "cncidr.txt"
-    "reject.txt"
 )
 MY_RULE_DOWNLOADING_URLS=(
     "https://raw.githubusercontent.com/thisIsIan-W/rulesets/main/configs"

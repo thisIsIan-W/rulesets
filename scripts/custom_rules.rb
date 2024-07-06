@@ -19,7 +19,6 @@ def append_rules(value, log_file)
     'RULE-SET,my-proxy,PROXY_MANUAL',
     'RULE-SET,telegramcidr,PROXY_MANUAL,no-resolve',
     'RULE-SET,my-reject,REJECT',
-    'RULE-SET,reject,REJECT',
     'RULE-SET,cncidr,DIRECT,no-resolve'
   ]
   extended_custom_rules = [
@@ -77,12 +76,6 @@ def insert_rule_providers(config_file, value, log_file)
       "type" => "file",
       "behavior" => "ipcidr",
       "path" => "./rule_provider/cncidr.yaml",
-      "format" => "yaml"
-    },
-    "reject" => {
-      "type" => "file",
-      "behavior" => "classical",
-      "path" => "./rule_provider/reject.yaml",
       "format" => "yaml"
     },
     "my-direct" => {

@@ -1,34 +1,26 @@
 #!/bin/bash
-BASE_LOG_FILE="/etc/openclash/rule_provider/import_3rd_party_rules.log"
-OPENCLASH_LOG_FILE="/tmp/openclash.log"
-BASE_REFRESH_URL="http://127.0.0.1:$(uci -q get openclash.config.cn_port)/providers/rules/"
-BASE_DASHBOARD_AUTH_TOKEN="Authorization: Bearer $(uci -q get openclash.config.dashboard_password)"
-URLS_TO_BE_REFRESHED=(
-  "${BASE_REFRESH_URL}chinaIPs"
-  "${BASE_REFRESH_URL}my-proxy"
-  "${BASE_REFRESH_URL}my-direct"
-  "${BASE_REFRESH_URL}my-reject"
-)
+shell_cfg_path=$1
+if [ -z "$shell_cfg_path" ]; then
+  shell_cfg_path="/etc/openclash/rule_provider/scripts/common/rule_provider_urls_cfg.sh"
+fi
+. $shell_cfg_path
 
 logger() {
-  echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$BASE_LOG_FILE
-  echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$OPENCLASH_LOG_FILE
+    echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$BASE_LOG_FILE
+    echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$OPENCLASH_LOG_FILE
 }
 
-do_refresh() {
-  curl -sS --retry 0 --location --request PUT "${BASE_REFRESH_URL}" --header "$BASE_DASHBOARD_AUTH_TOKEN"
-  result=$?
-  if [ $result -eq 0 ]; then
-    logger "刷新配置 $1 成功！"
-  else
-    logger "刷新配置 $1 失败......"
-  fi
+refresh_config() {
+    for index in "${!URLS_TO_BE_REFRESHED[@]}"; do
+        curl -sS --retry 0 --location --request PUT "${BASE_REFRESH_URL}" --header "$BASE_DASHBOARD_AUTH_TOKEN"
+        result=$?
+        if [ $result -eq 0 ]; then
+            logger "刷新配置 ${URLS_TO_BE_REFRESHED[$index]} 成功！"
+        else
+            logger "刷新配置 ${URLS_TO_BE_REFRESHED[$index]} 失败......"
+        fi
+    done
+    logger ""
 }
 
-refresh_manually() {
-  for index in "${!URLS_TO_BE_REFRESHED[@]}"; do
-    do_refresh "${URLS_TO_BE_REFRESHED[$index]}" "${URLS_TO_BE_REFRESHED[$index]}"
-  done
-}
-
-refresh_manually
+refresh_config

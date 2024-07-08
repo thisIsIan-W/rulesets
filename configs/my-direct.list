@@ -1,5 +1,6 @@
+DOMAIN-KEYWORD,postman
 DOMAIN-KEYWORD,bitwarden
-DOMAIN-KEYWORD,jsdelivr
+
 DOMAIN-SUFFIX,killingfloor2.com
 DOMAIN-SUFFIX,killingfloor3.com
 DOMAIN-SUFFIX,tripwireinteractive.com
@@ -60,11 +61,9 @@ DOMAIN-SUFFIX,virtualearth.net
 DOMAIN-SUFFIX,appcenter.ms
 DOMAIN-SUFFIX,rmbgame.net
 DOMAIN-SUFFIX,duowan.com
-DOMAIN-SUFFIX,duowan999.com
+DOMAIN-SUFFIX,duowan998.com
 DOMAIN-SUFFIX,parsec.app
 DOMAIN-SUFFIX,steampy.com
-DOMAIN-SUFFIX,byruthub.org
-DOMAIN-SUFFIX,repack-byrutor.org
 DOMAIN-SUFFIX,my-kof.com
 DOMAIN-SUFFIX,allhistory.com
 DOMAIN-SUFFIX,hfdongfang.com
@@ -78,4 +77,3 @@ DOMAIN-SUFFIX,vmware.com
 DOMAIN-SUFFIX,wireshark.org
 DOMAIN-SUFFIX,nacos.io
 DOMAIN-SUFFIX,bewildcard.com
-DOMAIN-KEYWORD,postman

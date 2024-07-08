@@ -1,0 +1,77 @@
+ payload:
+  - DOMAIN-SUFFIX,killingfloor2.com
+  - DOMAIN-SUFFIX,killingfloor3.com
+  # - DOMAIN-SUFFIX,tripwireinteractive.com
+  - DOMAIN-SUFFIX,settings-win.data.microsoft.com
+  - DOMAIN-SUFFIX,vscode-sync.trafficmanager.net
+  - DOMAIN-SUFFIX,delivery.mp.microsoft.com
+  - DOMAIN-SUFFIX,visualstudio.com
+  - DOMAIN-SUFFIX,day.app
+  - DOMAIN-SUFFIX,nvidia.com
+  
+  - DOMAIN-SUFFIX,steam-chat.com
+  - DOMAIN-SUFFIX,steamcontent.com
+  # 放到了 my-proxy 里
+  #-   - DOMAIN-SUFFIX,steamstatic.com
+  - DOMAIN-SUFFIX,steamserver.net
+  - DOMAIN-SUFFIX,test.steampowered.com
+  # 放到了 my-proxy 里
+  # -   - DOMAIN-SUFFIX,api.steampowered.com
+  - DOMAIN-SUFFIX,insideruser.microsoft.com
+  - DOMAIN-SUFFIX,update.microsoft.com
+  - DOMAIN-SUFFIX,smartscreen.microsoft.com
+  - DOMAIN-SUFFIX,wdcp.microsoft.com
+  - DOMAIN-SUFFIX,activity.windows.com
+  - DOMAIN-SUFFIX,greasyfork.org
+  - DOMAIN-SUFFIX,tampermonkey.net
+  - DOMAIN-SUFFIX,userscript.zone
+  - DOMAIN-SUFFIX,openuserjs.org
+  - DOMAIN-SUFFIX,jetbrains.com
+  - DOMAIN-SUFFIX,repo.maven.apache.org
+  - DOMAIN-SUFFIX,ntp.org
+  - DOMAIN-SUFFIX,push.apple.com
+  - DOMAIN-SUFFIX,time.apple.com
+  - DOMAIN-SUFFIX,wps.apple.com
+  - DOMAIN-SUFFIX,time.windows.com
+  - DOMAIN-SUFFIX,time.ubuntu.com
+  - DOMAIN-SUFFIX,4006510600.com
+  - DOMAIN-SUFFIX,srip.net
+  - DOMAIN-SUFFIX,spring.io
+  - DOMAIN-SUFFIX,mvnrepository.org
+  - DOMAIN-SUFFIX,perfma.com
+  - DOMAIN-SUFFIX,gupaoedu.com
+  - DOMAIN-SUFFIX,gceasy.io
+  - DOMAIN-SUFFIX,codeleak.pl
+  - DOMAIN-SUFFIX,buke999.com
+  - DOMAIN-SUFFIX,52jbj.com
+  - DOMAIN-SUFFIX,apache.org
+  - DOMAIN-SUFFIX,dircleaner.com
+  - DOMAIN-SUFFIX,internetdownloadmanager.com
+  - DOMAIN-SUFFIX,graph.microsoft.com
+  - DOMAIN-SUFFIX,edge.microsoft.com
+  - DOMAIN-SUFFIX,xboxlive.com
+  - DOMAIN-SUFFIX,xboxservices.com
+  - DOMAIN-SUFFIX,s-microsoft.com
+  - DOMAIN-SUFFIX,login.live.com
+  - DOMAIN-SUFFIX,msedge.net
+  - DOMAIN-SUFFIX,azureedge.net
+  - DOMAIN-SUFFIX,virtualearth.net
+  - DOMAIN-SUFFIX,appcenter.ms
+  - DOMAIN-SUFFIX,rmbgame.net
+  - DOMAIN-SUFFIX,duowan.com
+  - DOMAIN-SUFFIX,duowan998.com
+  - DOMAIN-SUFFIX,parsec.app
+  - DOMAIN-SUFFIX,steampy.com
+  - DOMAIN-SUFFIX,my-kof.com
+  - DOMAIN-SUFFIX,allhistory.com
+  - DOMAIN-SUFFIX,hfdongfang.com
+  - DOMAIN-SUFFIX,wallpapershome.com
+  - DOMAIN-SUFFIX,pdfdo.com
+  - DOMAIN-SUFFIX,fastthread.io
+  - DOMAIN-SUFFIX,patorjk.com
+  - DOMAIN-SUFFIX,dmbj.cc
+  - DOMAIN-SUFFIX,pwypyq.com
+  - DOMAIN-SUFFIX,vmware.com
+  - DOMAIN-SUFFIX,wireshark.org
+  - DOMAIN-SUFFIX,nacos.io
+  - DOMAIN-SUFFIX,bewildcard.com

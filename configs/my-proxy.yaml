@@ -1,5 +1,6 @@
-DOMAIN-SUFFIX,steamstatic.com
-DOMAIN-SUFFIX,api.steampowered.com
+payload:
+  - DOMAIN-SUFFIX,steamstatic.com
+  - DOMAIN-SUFFIX,api.steampowered.com
   
   # - DOMAIN-KEYWORD,google
   # - DOMAIN-KEYWORD,twitch
@@ -8,5 +9,5 @@ DOMAIN-SUFFIX,api.steampowered.com
   # - DOMAIN-KEYWORD,telegram
   # - DOMAIN-KEYWORD,gstatic
   # - DOMAIN-KEYWORD,github
-DOMAIN-SUFFIX,pki.goog
-DOMAIN-KEYWORD,cloudflare
+  - DOMAIN-SUFFIX,pki.goog
+  - DOMAIN-KEYWORD,cloudflare

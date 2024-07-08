@@ -43,13 +43,13 @@ SHELL
   # 不要格式化！！！
   File.open("#{yaml_cfg_path}", 'w') do |file|
       file.puts 'priority_custom_rules: 
-  - RULE-SET,my-reject,REJECT
   - RULE-SET,my-proxy,REJECT
-  - RULE-SET,my-direct,DIRECT
+  - RULE-SET,my-reject,REJECT
   - RULE-SET,reject,PROXY_MANUAL
-extended_custom_rules: 
+extended_custom_rules:
+  - RULE-SET,my-direct,DIRECT
   - RULE-SET,cncidr,DIRECT,no-resolve
-rule_providers: 
+rule-providers:
   cncidr:
     type: file
     behavior: classical

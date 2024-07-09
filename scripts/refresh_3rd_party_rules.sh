@@ -12,15 +12,15 @@ logger() {
 
 refresh_config() {
     for index in "${!URLS_TO_BE_REFRESHED[@]}"; do
-
         ruby -e "require 'net/http'; \
          require 'uri'; \
          url = URI.parse('${URLS_TO_BE_REFRESHED[$index]}'); \
          http = Net::HTTP.new(url.host, url.port); \
          request = Net::HTTP::Put.new(url.path); \
-         request['Content-Type'] = 'application/json' \
-         request['Authorization'] = '$BASE_DASHBOARD_AUTH_TOKEN' \
+         request['Content-Type'] = 'application/json'; \
+         request['Authorization'] = '$BASE_DASHBOARD_AUTH_TOKEN'; \
          response = http.request(request); \
+         puts ''
          if response.code == '204'; \
            exit 0; \
          else; \

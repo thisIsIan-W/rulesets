@@ -26,7 +26,7 @@ RULESET_TYPES=(
 )
 
 count_file_lines() {
-    cat $1 | wc -l
+    cat $1 | wc -l 2>/dev/null
 }
 logger() {
     echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$BASE_LOG_FILE

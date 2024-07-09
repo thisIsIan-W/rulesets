@@ -1,6 +1,4 @@
-
 # For shells scripts start...
-
 def gen_cfg_files
   shell_cfg_path = "/etc/openclash/rule_provider/scripts/common/rule_provider_urls_cfg.sh"
   yaml_cfg_path = "/etc/openclash/rule_provider/scripts/common/rule_providers_cfg.yaml"
@@ -35,7 +33,7 @@ URLS_TO_BE_REFRESHED=(
 )
 SHELL
   end
-  # For shell scripts end...
+# For shell scripts end...
 
   # 以下代码会被 custom_rules.rb 调用，作用是导入自定义规则集到 yaml 中
   # 不要格式化！！！

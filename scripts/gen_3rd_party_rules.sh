@@ -2,7 +2,9 @@
 # 以下配置写入：覆写设置 => 开发者选项 => exit 0 之前粘贴以下两行：
 # 需要先把脚本文件保存在 /etc/openclash/rule_provider/scripts 文件夹下
 # RUBY_FILE="/etc/openclash/rule_provider/scripts/custom_rules.rb"
-# ruby -e "require '$RUBY_FILE'; write_custom_rules('$CONFIG_FILE', '$LOG_FILE')"
+# if [ -e "$RUBY_FILE" ]; then
+#   ruby -e "require '$RUBY_FILE'; write_custom_rules('$CONFIG_FILE', '$LOG_FILE', 'fake_generate')" 2>"$LOG_FILE"
+# fi
 
 shell_cfg_path=$1
 fake_generate=$2
@@ -144,9 +146,6 @@ update_crontab() {
 
     # 安装更新后的Crontab任务
     crontab "$updated_crontab_file"
-
-    logger "新的Crontab任务列表 ==> \n\n$(crontab -l)\n\n"
-
     rm -f "$current_crontab_file" "$updated_crontab_file"
 }
 
@@ -223,8 +222,11 @@ entrance() {
     logger "所有操作总耗时 $duration s！"
 }
 
-if [ -n "$fake_generate" ]; then
-    logger "准备生成假文件，等待openclash启动成功后再尝试下载并刷新"
+if [ -z "$fake_generate" ]; then
+    entrance
+else
+    # 裸连下载 github 规则集文件极大可能超时，导致服务启动时间过长或失败，所以改用异步下载
+    # 先创建所需的 *.yaml 文件并追加假内容，等待服务正常启动之后再重新下载并刷新
     for url in "${URLS_TO_BE_REFRESHED[@]}"; do
         filtered_url="${url/${BASE_REFRESH_URL}/}"
         rm $BASE_DIR/"$filtered_url".yaml 2>/dev/null
@@ -232,35 +234,31 @@ if [ -n "$fake_generate" ]; then
         echo "payload:" >>"$BASE_DIR/$filtered_url.yaml"
         echo "  - DOMAIN-SUFFIX,XXXXXXXXXXXYYYYYYYYYYYZZZZZZ.com" >>"$BASE_DIR/$filtered_url.yaml"
     done
-    logger "假文件成功创建！"
-
     start_time=$(date +%s)
-    max_runtime=$((5 * 60))
-    # 异步任务定义
+    max_runtime=$((10 * 60))
     {
         while true; do
             # 检查是否超过最大运行时间
             current_time=$(date +%s)
             elapsed_time=$((current_time - start_time))
             if [ $elapsed_time -ge $max_runtime ]; then
-                logger "异步下载任务达到最大运行时间，退出循环"
+                logger "Error: --------------- 异步下载任务达到最大运行时间 ($max_runtime s)，不再尝试 ---------------"
                 break
             fi
 
             files_count=$(ls -1 /tmp/yaml_* 2>/dev/null | wc -l)
-            if [ $files_count -gt 0 ]; then
-                sleep 2
+            # 由于clash启动失败后也会删除上述文件，所以需要同时检测 clash core 以及 openclash_watchdog.sh 脚本是否已经正常加载并启动
+            clash_core_started=$(pidof clash | sed 's/$//g' | wc -l 2>/dev/null)                     # /etc/init.d/openclash stop 函数
+            watchdog_started=$(ps -efw | grep -v grep | grep -c "openclash_watchdog.sh" 2>/dev/null) # /usr/share/openclash/openclash_ps.sh unify_ps_status
+            if [ $files_count -gt 0 ] || [ $clash_core_started -lt 1 ] || [ $watchdog_started -lt 1 ]; then
+                logger "openclash服务未完成启动，等待5秒后重试......"
+                sleep 5
             else
-                # 文件不存在表示openclash已经启动成功，执行下载逻辑
-                sleep 2
+                sleep 5
                 entrance
+                logger "自动下载第三方规则集任务完成，退出循环"
                 break
             fi
         done
     } &
-    exit 0
-fi
-
-if [ -z "$fake_generate" ]; then
-    entrance
 fi

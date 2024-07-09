@@ -1,4 +1,4 @@
- payload:
+payload:
   - DOMAIN-SUFFIX,killingfloor2.com
   - DOMAIN-SUFFIX,killingfloor3.com
   # - DOMAIN-SUFFIX,tripwireinteractive.com

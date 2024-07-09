@@ -48,8 +48,14 @@ end
 
 def insert_rule_providers(config_file, value, custom_yaml_data, log_file)
     begin
-      value['rule_providers'] ||= {}
-      value['rule_providers'].merge!(custom_yaml_data['rule_providers'])
+      value['rule-providers'] ||= {}
+
+      File.open(log_file, "a") do |f|
+        f.puts "#{get_current_time} custom_yaml_data['rule-providers'] ====> \n #{custom_yaml_data['rule-providers']}"
+      end
+
+      custom_rule_providers = custom_yaml_data['rule-providers'] || {}
+      value['rule-providers'].merge!(custom_rule_providers)
       File.open(config_file, 'w') { |f| YAML.dump(value, f) }
     rescue Exception => e
       File.open(log_file, "a") do |f|
@@ -58,10 +64,10 @@ def insert_rule_providers(config_file, value, custom_yaml_data, log_file)
     end
 end
 
-def write_custom_rules(config_file, log_file)
+def write_custom_rules(config_file, log_file, fake_generate)
   begin
     File.open(log_file, "a") do |f|
-      f.puts "#{get_current_time} 准备导出所有自定义 rule_providers 到配置文件中 ==> #{config_file}"
+      f.puts "#{get_current_time} 准备导出所有自定义 rule-providers 到配置文件中 ==> #{config_file}"
     end
 
     # 生成yaml及sh配置, gen_cfg_files 函数由顶部 require_relative 'gen_cfg_files' 导入
@@ -72,13 +78,13 @@ def write_custom_rules(config_file, log_file)
     append_rules(value, custom_yaml_data, log_file)
     insert_rule_providers(config_file, value, custom_yaml_data, log_file)
 
+    fake_generate.nil? || fake_generate.empty? ?
+    system("bash \"#{download_files_shell_path}\" \"#{shell_cfg_path}\"") :
     system("bash \"#{download_files_shell_path}\" \"#{shell_cfg_path}\" \"fake_generate\"")
 
     File.open(log_file, "a") do |f|
-      f.puts "#{get_current_time} 导出所有自定义 rule_providers 到配置文件中成功！"
+      f.puts "#{get_current_time} 导出所有自定义 rule-providers 到配置文件 ==> #{config_file} 中成功！"
     end
-
-    system("cp #{config_file} \"/etc/openclash/rule_provider/\" \"fake_generate\"")
   rescue Exception => e
     File.open(log_file, "a") do |f|
       f.puts "#{get_current_time} Error: YAML 加载 #{config_file} 出现异常，不再继续执行下去 ==>【#{e.message}】"

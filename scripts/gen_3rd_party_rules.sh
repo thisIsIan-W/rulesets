@@ -13,10 +13,10 @@ if [ -z "$shell_cfg_path" ]; then
 fi
 
 . $shell_cfg_path
-. $BASE_SCRIPTS_DIR/3rd_party_rules_utils.sh "$BASE_SCRIPTS_DIR" "$BASE_LOG_FILE"
+. "$BASE_SCRIPTS_DIR"/3rd_party_rules_utils.sh "$BASE_SCRIPTS_DIR" "$BASE_LOG_FILE"
 
 PUSH_MSG="全部第三方规则集文件更新成功！"
-PUSH_MSG_INITAIL="$PUSH_MSG"
+PUSH_MSG_INITIAL="$PUSH_MSG"
 
 RULESET_TYPES=(
     "ipcidr"
@@ -29,11 +29,11 @@ count_file_lines() {
     cat $1 | wc -l 2>/dev/null
 }
 logger() {
-    echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$BASE_LOG_FILE
-    echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$OPENCLASH_LOG_FILE
+    echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>"$BASE_LOG_FILE"
+    echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>"$OPENCLASH_LOG_FILE"
 }
 flush_log() {
-    echo -n "" >$BASE_LOG_FILE
+    echo -n "" >"$BASE_LOG_FILE"
 }
 current_millis() {
     echo $(($(date +%s%3N)))
@@ -41,17 +41,17 @@ current_millis() {
 
 do_push() {
     # Documentation: https://bark.day.app/#/encryption
-    encrypted_deviceKey="U2FsdGVkX1/4ZpX7VeztU6fOabZXhrNFkHi4yNuUjxiHHru+R657NEPADRDa7lPf"
-    encrypted_key="U2FsdGVkX1+ttdUfGCkXwORU5q1vCjWO1+QwvXCus8eo0RbBCKKWccuNtC3S0TbZ"
-    encrypted_iv="U2FsdGVkX1/lduGY4+8UlBZ0qU1Augum43sd3NIMq52YzkIWFtqDyUhZrpDWvE7h"
+    encrypted_deviceKey="U2FsdGVkX19JoDCN9YkkGBB3bQGe4weTdLMQr/e4j++mgIW2m34FdQB4HX8QlxnQ"
+    encrypted_key="U2FsdGVkX18Tch9LZrXlwn3Xl7OnXgCjP+HvQFlLJD+zwMtnivcRTJewqUDXY37R"
+    encrypted_iv="U2FsdGVkX19VYMZqYNojhuOfHLCFJh4wNdqoLPC/NGchh9+rWns5hurxEoHyltz8"
 
-    deviceKey=$(bash $BASE_DIR/sha256/decrypt.sh $encrypted_deviceKey)
-    key=$(bash $BASE_DIR/sha256/decrypt.sh $encrypted_key)
-    iv=$(bash $BASE_DIR/sha256/decrypt.sh $encrypted_iv)
+    deviceKey=$(bash "$BASE_DIR"/sha256/decrypt.sh "$encrypted_deviceKey")
+    key=$(bash "$BASE_DIR"/sha256/decrypt.sh "$encrypted_key")
+    iv=$(bash "$BASE_DIR"/sha256/decrypt.sh "$encrypted_iv")
 
-    ciphertext=$(echo -n $(printf '{"title": "%s", "body":"%s", "sound":"bell"}' "更新 openclash 第三方规则集结果" "$PUSH_MSG") |
-        openssl enc -aes-128-cbc -K $(printf $key | xxd -ps -c 200) -iv $(printf $iv | xxd -ps -c 200) | base64 -w 0)
-    curl --data-urlencode "ciphertext=$ciphertext" --data-urlencode "iv=$iv" https://api.day.app/$deviceKey $OPENCLASH_LOG_FILE >>$BASE_LOG_FILE 2>&1
+    ciphertext=$(echo -n "$(printf '{"title": "%s", "body":"%s", "sound":"bell"}' "更新 openclash 第三方规则集结果" "$PUSH_MSG")" |
+        openssl enc -aes-128-cbc -K "$(printf "$key" | xxd -ps -c 200)" -iv "$(printf "$iv" | xxd -ps -c 200)" | base64 -w 0)
+    curl --data-urlencode "ciphertext=$ciphertext" --data-urlencode "iv=$iv" https://api.day.app/"$deviceKey" >>"$OPENCLASH_LOG_FILE" "$BASE_LOG_FILE" 2>&1
 }
 
 exec_after_download() {
@@ -60,12 +60,13 @@ exec_after_download() {
     local final_dir=$3    # 文件最终路径 $BASE_DIR
 
     local file_full_dir="$download_dir/$file_name"
-    local lines_before_update=$(count_file_lines "$file_full_dir")
+    local lines_before_update
+    lines_before_update=$(count_file_lines "$file_full_dir")
 
     # yaml 文件使用通用替换函数进行替换
     # 替换之后的 yaml behavior 就变成了 classical
     local is_valid_file=0
-    if [ "$file_name" == *.yaml ]; then
+    if [[ "$file_name" == *.yaml ]]; then
         common_rules_replace "$file_full_dir"
     else
         # 非 yaml 如 txt || list 等文件需要先确定规则集类型
@@ -96,8 +97,8 @@ exec_after_download() {
             rm "$file_full_dir" 2>/dev/null
         else
             mv "$file_full_dir" "$final_dir/$file_name" 2>/dev/null
-            chmod 777 "$final_dir/$file_name" 2>/dev/null
-            local lines_after_update=$(count_file_lines "$final_dir/$file_name")
+            local lines_after_update
+            lines_after_update=$(count_file_lines "$final_dir/$file_name")
             logger "$final_dir/$file_name 修改前一共 $lines_before_update 行内容，修改后变为 $lines_after_update 行，总共删除了 $((lines_before_update - lines_after_update)) 行内容！\n\n"
         fi
     fi
@@ -151,7 +152,7 @@ update_crontab() {
 
 append_err_msg() {
     file_index=$1
-    if [ "$PUSH_MSG" == "$PUSH_MSG_INITAIL" ]; then
+    if [ "$PUSH_MSG" == "$PUSH_MSG_INITIAL" ]; then
         PUSH_MSG=""
     fi
     PUSH_MSG+="$file_index, "
@@ -176,7 +177,6 @@ do_download() {
 
 download() {
     logger "准备下载第三方规则集文件..."
-    local exec_result=0
     local download_exit_code=0
     for idx in "${!RULE_DOWNLOADING_URLS[@]}"; do
         url="${RULE_DOWNLOADING_URLS[$idx]}"
@@ -184,7 +184,7 @@ download() {
         file_name=$(basename "$url")
         file_full_dir="$TMP_RULESETS_FILE_DIRECTORY/$file_name"
         download_exit_code=$(do_download "$url" "$TMP_RULESETS_FILE_DIRECTORY" "$file_full_dir")
-        if [ $download_exit_code -eq 0 ]; then
+        if [ "$download_exit_code" -eq 0 ]; then
             logger "$file_name 已成功下载到本地 ==> $file_full_dir"
             exec_after_download "$file_name" "$TMP_RULESETS_FILE_DIRECTORY" "$BASE_DIR"
         else
@@ -195,7 +195,7 @@ download() {
 
     rm -rf "$TMP_RULESETS_FILE_DIRECTORY"
 
-    if [ "$PUSH_MSG" != "$PUSH_MSG_INITAIL" ]; then
+    if [ "$PUSH_MSG" != "$PUSH_MSG_INITIAL" ]; then
         PUSH_MSG+=" 下载失败，跳过更新\n"
     fi
 
@@ -212,9 +212,7 @@ entrance() {
     # 下载第三方规则集文件至本地
     download
     # 给手机发push
-    if [ -z "$fake_generate" ]; then
-        do_push
-    fi
+    do_push
 
     end_mills=$(current_millis)
     duration=$((end_mills - start_mills))
@@ -229,8 +227,8 @@ else
     # 先创建所需的 *.yaml 文件并追加假内容，等待服务正常启动之后再重新下载并刷新
     for url in "${URLS_TO_BE_REFRESHED[@]}"; do
         filtered_url="${url/${BASE_REFRESH_URL}/}"
-        rm $BASE_DIR/"$filtered_url".yaml 2>/dev/null
-        touch $BASE_DIR/"$filtered_url".yaml 2>/dev/null
+        rm "$BASE_DIR"/"$filtered_url".yaml 2>/dev/null
+        touch "$BASE_DIR"/"$filtered_url".yaml 2>/dev/null
         echo "payload:" >>"$BASE_DIR/$filtered_url.yaml"
         echo "  - DOMAIN-SUFFIX,XXXXXXXXXXXYYYYYYYYYYYZZZZZZ.com" >>"$BASE_DIR/$filtered_url.yaml"
     done
@@ -246,12 +244,12 @@ else
                 break
             fi
 
-            files_count=$(ls -1 /tmp/yaml_* 2>/dev/null | wc -l)
+            files_count=$(find -1 /tmp/yaml_* 2>/dev/null | wc -l)
             # 由于clash启动失败后也会删除上述文件，所以需要同时检测 clash core 以及 openclash_watchdog.sh 脚本是否已经正常加载并启动
             clash_core_started=$(pidof clash | sed 's/$//g' | wc -l 2>/dev/null)                     # /etc/init.d/openclash stop 函数
             watchdog_started=$(ps -efw | grep -v grep | grep -c "openclash_watchdog.sh" 2>/dev/null) # /usr/share/openclash/openclash_ps.sh unify_ps_status
-            if [ $files_count -gt 0 ] || [ $clash_core_started -lt 1 ] || [ $watchdog_started -lt 1 ]; then
-                logger "openclash服务未完成启动，等待5秒后重试......"
+            if [ "$files_count" -gt 0 ] || [ "$clash_core_started" -lt 1 ] || [ "$watchdog_started" -lt 1 ]; then
+                logger "openclash 服务未完成启动，等待5秒后重试......"
                 sleep 5
             else
                 sleep 5

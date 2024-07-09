@@ -3,3 +3,4 @@ payload:
   - DOMAIN-SUFFIX,api.miwifi.com
   - DOMAIN-SUFFIX,pangolin-sdk-toutiao.com
   - DOMAIN-SUFFIX,ulogs.umeng.com
+  - DOMAIN-SUFFIX,errnewlog.umeng.com

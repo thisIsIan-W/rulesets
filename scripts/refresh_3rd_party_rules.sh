@@ -12,7 +12,20 @@ logger() {
 
 refresh_config() {
     for index in "${!URLS_TO_BE_REFRESHED[@]}"; do
-        curl -sS --retry 0 --location --request PUT "${BASE_REFRESH_URL}" --header "$BASE_DASHBOARD_AUTH_TOKEN"
+
+        ruby -e "require 'net/http'; \
+         require 'uri'; \
+         url = URI.parse('${URLS_TO_BE_REFRESHED[$index]}'); \
+         http = Net::HTTP.new(url.host, url.port); \
+         request = Net::HTTP::Put.new(url.path); \
+         request['Content-Type'] = 'application/json' \
+         request['Authorization'] = '$BASE_DASHBOARD_AUTH_TOKEN' \
+         response = http.request(request); \
+         if response.code == '204'; \
+           exit 0; \
+         else; \
+           exit 1; \
+         end"
         result=$?
         if [ $result -eq 0 ]; then
             logger "刷新配置 ${URLS_TO_BE_REFRESHED[$index]} 成功！"

@@ -23,8 +23,8 @@ RULE_DOWNLOADING_URLS=(
   "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/reject.txt"
 )
 
-BASE_REFRESH_URL="http://127.0.0.1:$(uci -q get openclash.config.cn_port)/providers/rules/"
-BASE_DASHBOARD_AUTH_TOKEN="Authorization: Bearer $(uci -q get openclash.config.dashboard_password)"
+BASE_REFRESH_URL="http://$(uci -q get network.lan.ipaddr):$(uci -q get openclash.config.cn_port)/providers/rules/"
+BASE_DASHBOARD_AUTH_TOKEN="Bearer $(uci -q get openclash.config.dashboard_password)"
 
 URLS_TO_BE_REFRESHED=(
   "${BASE_REFRESH_URL}cncidr"

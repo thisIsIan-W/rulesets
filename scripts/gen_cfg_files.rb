@@ -10,9 +10,12 @@ def gen_cfg_files
 BASE_DIR="/etc/openclash/rule_provider"
 BASE_SCRIPTS_DIR="$BASE_DIR/scripts"
 BASE_LOG_FILE="$BASE_DIR/rulesets_download_&_refresh.log"
-TMP_RULESETS_FILE_DIRECTORY="$BASE_DIR/tmp"
+TMP_RULESETS_FILE_DIRECTORY="/tmp/rulesets"
 OPENCLASH_LOG_FILE="/tmp/openclash.log"
 
+# 为了统一格式，省去人为判断 behavior 的麻烦、部分提升匹配效率，所有文件都会被转换成 classical 类型
+# 为了统一格式，省去人为判断 behavior 的麻烦、部分提升匹配效率，所有文件都会被转换成 classical 类型
+# 为了统一格式，省去人为判断 behavior 的麻烦、部分提升匹配效率，所有文件都会被转换成 classical 类型
 RULE_DOWNLOADING_URLS=(
   "https://raw.githubusercontent.com/thisIsIan-W/rulesets/main/configs/my-direct.yaml"
   "https://raw.githubusercontent.com/thisIsIan-W/rulesets/main/configs/my-proxy.yaml"

@@ -1,3 +1,4 @@
 payload:
   - DOMAIN-SUFFIX,ad-feeds.com
   - DOMAIN-SUFFIX,api.miwifi.com
+  - DOMAIN-suffix,pangolin-sdk-toutiao.com

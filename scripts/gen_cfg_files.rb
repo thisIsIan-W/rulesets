@@ -21,7 +21,6 @@ RULE_DOWNLOADING_URLS=(
   "https://raw.githubusercontent.com/thisIsIan-W/rulesets/main/configs/my-proxy.yaml"
   "https://raw.githubusercontent.com/thisIsIan-W/rulesets/main/configs/my-reject.yaml"
   "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/cncidr.txt"
-  "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/reject.txt"
 )
 
 BASE_REFRESH_URL="http://$(uci -q get network.lan.ipaddr):$(uci -q get openclash.config.cn_port)/providers/rules/"
@@ -44,9 +43,8 @@ SHELL
   # 不要格式化！！！
   File.open("#{yaml_cfg_path}", 'w') do |file|
       file.puts 'priority_custom_rules: 
-  - RULE-SET,my-proxy,REJECT
+  - RULE-SET,my-proxy,PROXY_MANUAL
   - RULE-SET,my-reject,REJECT
-  - RULE-SET,reject,PROXY_MANUAL
 extended_custom_rules:
   - RULE-SET,my-direct,DIRECT
   - RULE-SET,cncidr,DIRECT,no-resolve
@@ -55,12 +53,7 @@ rule-providers:
     type: file
     behavior: classical
     path: ./rule_provider/cncidr.yaml
-    format: yaml
-  reject:
-    type: file
-    behavior: classical
-    path: ./rule_provider/reject.yaml
-    format: yaml
+    format: yam
   my-proxy:
     type: file
     behavior: classical

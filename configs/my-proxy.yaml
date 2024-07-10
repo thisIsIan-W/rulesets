@@ -1,6 +1,4 @@
 payload:
-  - DOMAIN-SUFFIX,steamstatic.com
-  - DOMAIN-SUFFIX,api.steampowered.com
   - DOMAIN-SUFFIX,pki.goog
   - DOMAIN-KEYWORD,cloudflare
   - DOMAIN-KEYWORD,anthropic

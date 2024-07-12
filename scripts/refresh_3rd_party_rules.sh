@@ -1,9 +1,22 @@
 #!/bin/bash
-shell_cfg_path=$1
-if [ -z "$shell_cfg_path" ]; then
-  shell_cfg_path="/etc/openclash/rule_provider/scripts/common/rule_provider_urls_cfg.sh"
-fi
-. $shell_cfg_path
+
+BASE_DIR="/etc/openclash/rule_provider"
+BASE_LOG_FILE="$BASE_DIR/rulesets_download_&_refresh.log"
+OPENCLASH_LOG_FILE="/tmp/openclash.log"
+
+IP_ADDR="$(uci -q get network.lan.ipaddr)"
+CN_PORT="$(uci -q get openclash.config.cn_port)"
+DASHBOARD_PASSWORD="$(uci -q get openclash.config.dashboard_password)"
+BASE_REFRESH_URL="http://${IP_ADDR}:${CN_PORT}/providers/rules"
+BASE_DASHBOARD_AUTH_TOKEN="Bearer ${DASHBOARD_PASSWORD}"
+
+URLS_TO_BE_REFRESHED=(
+  "$BASE_REFRESH_URL/my-proxy"
+  "$BASE_REFRESH_URL/my-direct"
+  "$BASE_REFRESH_URL/my-reject"
+  "$BASE_REFRESH_URL/cncidr"
+  "$BASE_REFRESH_URL/reject"
+)
 
 logger() {
     echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$BASE_LOG_FILE

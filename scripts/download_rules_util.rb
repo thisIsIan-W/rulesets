@@ -1,88 +1,86 @@
 require 'logger'
 require 'singleton'
+require 'open3'
+require 'json'
 
-class CommonUtils
+PUSH_SECRET_PATH = "/etc/openclash/rule_provider/sha256/bark_sha256_password"
+PUSH_SECRET_DECRYPT_SHELL_PATH = "/etc/openclash/rule_provider/sha256/decrypt.sh"
+ENCRYPTED_DEVICE_KEY = "U2FsdGVkX19JoDCN9YkkGBB3bQGe4weTdLMQr/e4j++mgIW2m34FdQB4HX8QlxnQ"
+ENCRYPTED_KEY = "U2FsdGVkX18Tch9LZrXlwn3Xl7OnXgCjP+HvQFlLJD+zwMtnivcRTJewqUDXY37R"
+ENCRYPTED_IV = "U2FsdGVkX19VYMZqYNojhuOfHLCFJh4wNdqoLPC/NGchh9+rWns5hurxEoHyltz8"
 
-  def self.encrypted_device_info
-    encrypted_device_info = {}
-    encrypted_device_info["encrypted_device_key"] = "U2FsdGVkX19JoDCN9YkkGBB3bQGe4weTdLMQr/e4j++mgIW2m34FdQB4HX8QlxnQ"
-    encrypted_device_info["encrypted_key"] = "U2FsdGVkX18Tch9LZrXlwn3Xl7OnXgCjP+HvQFlLJD+zwMtnivcRTJewqUDXY37R"
-    encrypted_device_info["encrypted_iv"] = "U2FsdGVkX19VYMZqYNojhuOfHLCFJh4wNdqoLPC/NGchh9+rWns5hurxEoHyltz8"
-  end
+class Push
 
-  def self.get_push_device_info(file_path)
-    device_info = {}
-    File.open(file_path, 'r') do |file|
-      file.each_line do |line|
-        pairs = line.split("=")
-        key = pairs[0].strip
-        val = pairs[1].strip
-        device_info[key] = val
-      end
+  def push(extra_push_message)
+
+    stdout, stderr, status = Open3.capture3("bash #{PUSH_SECRET_DECRYPT_SHELL_PATH} #{ENCRYPTED_DEVICE_KEY}")
+    if status.success?
+      device_key = stdout.strip
     end
-    device_info
-  end
 
-  def self.current_time_sec
-    Time.now.to_i
-  end
-
-  def self.curl_request(url, request_data_map, use_ssl: true, method: 'GET')
-    request = Net::HTTP.const_get(method.capitalize).new(URI(url))
-    request.set_form_data(request_data_map)
-
-    Net::HTTP.start(uri.hostname, uri.port, use_ssl: use_ssl) do |http|
-      http.request(request)
+    stdout, stderr, status = Open3.capture3("bash #{PUSH_SECRET_DECRYPT_SHELL_PATH} #{ENCRYPTED_KEY}")
+    if status.success?
+      key = stdout.strip
     end
-  end
-end
 
-class Log
-  def initialize(file_path, level: Logger::INFO, datetime_format: '%Y-%m-%d %H:%M:%S')
-    @logger = Logger.new(file_path)
-    @logger.level = level
-    @logger.datetime_format = datetime_format
-    @file_path = file_path
-    @file_lock = Locker.instance
+    stdout, stderr, status = Open3.capture3("bash #{PUSH_SECRET_DECRYPT_SHELL_PATH} #{ENCRYPTED_IV}")
+    if status.success?
+      iv = stdout.strip
+    end
+
+    ciphertext_command = %Q{echo -n "$(printf '{"title": "%s", "body":"%s", "sound":"bell"}' "更新 openclash 第三方规则集结果" "#{extra_push_message}")" | \
+        openssl enc -aes-128-cbc -K "$(printf "#{key}" | xxd -ps -c 200)" -iv "$(printf "#{iv}" | xxd -ps -c 200)" | base64 -w 0}
+
+    stdout, stderr, status = Open3.capture3(ciphertext_command)
+    if status.success?
+      ciphertext = stdout.strip
+    end
+
+
+    request_data_map = {
+      "ciphertext" => ciphertext,
+      "iv" => iv
+    }
+    curl_request("https://api.day.app/#{device_key}", request_data_map)
   end
 
-  def logger
-    @logger
-  end
-
-  def flush_log
+  def curl_request(url, request_data_map, use_ssl: true, method: 'POST')
+    uri = URI.parse(url)
+    request = Net::HTTP.const_get(method.capitalize).new(uri)
+    request['Content-Type'] = 'application/json'
+    request.body = request_data_map.to_json
     begin
-      @file_lock.acquire_lock
-      if File.exist?(@file_path)
-        File.open(@file_path, 'w') {}
+      Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+        response = http.request(request)
+        if response.code.to_i == 200
+          return 0
+        else
+          return response.code.to_i
+        end
       end
-    ensure
-      @file_lock.release_lock
+    rescue Exception => e
+      return 1
     end
   end
 end
 
-class Locker
-  include Singleton
+class ExecShellCommand
 
-  def initialize
-    @locker = Mutex.new
+  def self.exec_shell_command(command, source_dir: nil)
+    raise "命令不能为空！" if command.nil? || command.empty? || command == ''
+
+    command = substitute_placeholders(command, source_dir)
+    stdout, stderr, status = Open3.capture3(command)
+    if stderr.empty?
+      return stdout, status
+    else
+      return stderr, status
+    end
   end
 
-  def acquire_lock
-    @locker.lock
+  def self.substitute_placeholders(command, source_dir)
+    command = command.gsub('{source_dir}', source_dir) if source_dir
+    command
   end
 
-  def release_lock
-    @locker.unlock
-  end
 end
-
-def abc
-  logger_instance = Log.new("G:/openclash.log")
-  logger_instance.logger.info("sdfsad")
-  logger_instance.flush_log
-  logger_instance.logger.info("hahahahah")
-end
-
-abc

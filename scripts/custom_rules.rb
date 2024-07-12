@@ -5,7 +5,11 @@
 # /usr/bin/ruby -e "require '$RUBY_FILE'; write_custom_rules('$CONFIG_FILE', '$LOG_FILE')" >> /tmp/openclash.log 2>&1
 
 require 'yaml'
-require_relative 'gen_cfg_files'
+
+# 由于 openclash 启动脚本目录和当前脚本所在目录不一致，所以自己的脚本需要用绝对路径引入
+require '/etc/openclash/rule_provider/scripts/gen_constants.rb'
+require '/etc/openclash/rule_provider/scripts/download_rules.rb'
+require '/etc/openclash/rule_provider/scripts/fake_download_rules.rb'
 
 def get_current_time
   Time.now.strftime("%Y-%m-%d %H:%M:%S")
@@ -47,40 +51,39 @@ def append_rules(value, custom_yaml_data, log_file)
 end
 
 def insert_rule_providers(config_file, value, custom_yaml_data, log_file)
-    begin
-      value['rule-providers'] ||= {}
+  begin
+    value['rule-providers'] ||= {}
 
-      File.open(log_file, "a") do |f|
-        f.puts "#{get_current_time} custom_yaml_data['rule-providers'] ====> \n #{custom_yaml_data['rule-providers']}"
-      end
-
-      custom_rule_providers = custom_yaml_data['rule-providers'] || {}
-      value['rule-providers'].merge!(custom_rule_providers)
-      File.open(config_file, 'w') { |f| YAML.dump(value, f) }
-    rescue Exception => e
-      File.open(log_file, "a") do |f|
-        f.puts "#{get_current_time} Error: 新增 rule-providers 失败,【#{e.message}】"
-      end
+    File.open(log_file, "a") do |f|
+      f.puts "#{get_current_time} custom_yaml_data['rule-providers'] ====> \n #{custom_yaml_data['rule-providers']}"
     end
+
+    custom_rule_providers = custom_yaml_data['rule-providers'] || {}
+    value['rule-providers'].merge!(custom_rule_providers)
+    File.open(config_file, 'w') { |f| YAML.dump(value, f) }
+  rescue Exception => e
+    File.open(log_file, "a") do |f|
+      f.puts "#{get_current_time} Error: 新增 rule-providers 失败,【#{e.message}】"
+    end
+  end
 end
 
-def write_custom_rules(config_file, log_file, fake_generate)
+def write_custom_rules(config_file, log_file)
   begin
     File.open(log_file, "a") do |f|
       f.puts "#{get_current_time} 准备导出所有自定义 rule-providers 到配置文件中 ==> #{config_file}"
     end
 
     # 生成yaml及sh配置, gen_cfg_files 函数由顶部 require_relative 'gen_cfg_files' 导入
-    shell_cfg_path, yaml_cfg_path, download_files_shell_path = gen_cfg_files
-
+    rules_cfg_path, yaml_cfg_path = gen_cfg_files
     value = YAML.load_file(config_file)
-    custom_yaml_data = YAML.load_file("#{yaml_cfg_path}")
+
+    custom_yaml_data = YAML.load_file(yaml_cfg_path)
     append_rules(value, custom_yaml_data, log_file)
     insert_rule_providers(config_file, value, custom_yaml_data, log_file)
 
-    fake_generate.nil? || fake_generate.empty? ?
-    system("bash \"#{download_files_shell_path}\" \"#{shell_cfg_path}\"") :
-    system("bash \"#{download_files_shell_path}\" \"#{shell_cfg_path}\" \"fake_generate\"")
+    # 异步下载
+    FakeDownloadRules.new
 
     File.open(log_file, "a") do |f|
       f.puts "#{get_current_time} 导出所有自定义 rule-providers 到配置文件 ==> #{config_file} 中成功！"

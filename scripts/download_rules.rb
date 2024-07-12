@@ -63,8 +63,12 @@ class DownloadRules
 
   public
 
-  def download
-    do_download
+  def download(fake)
+    if fake
+      FakeDownloadRules.new.fake_download
+    else
+      do_download
+    end
   end
 
   def do_download
@@ -92,10 +96,7 @@ class DownloadRules
     $push_message = $push_message.sub(/, $/, '') + " 下载或执行失败！" unless $push_msg_initial == $push_message
     Push.new.push($push_message)
 
-    # 刷新配置
-    RefreshRules.new.refresh
     log("所有下载、替换操作已经执行完成，耗时#{Time.now.to_i - start_time}")
-
     @thread_pool.shutdown_pool
   end
 
@@ -151,6 +152,62 @@ class DownloadRules
     end
   end
 
+end
+
+class FakeDownloadRules
+
+  include Log
+
+  def fake_download
+    URLS_TO_BE_REFRESHED.each do |url|
+      filtered_url = url.gsub(/\#\{BASE_REFRESH_URL\}/, '')
+      yaml_file = BASE_DIR + "/#{filtered_url}.yaml"
+
+      # 删除旧文件并创建新文件
+      FileUtils.rm(yaml_file, force: true) rescue nil
+      FileUtils.rm(BASE_LOG, force: true) rescue nil
+      File.write(yaml_file, "payload:\n  - DOMAIN-SUFFIX,This_is_a_fake_url.com\n")
+      log("旧yaml文件 #{yaml_file} 已被替换为假 yaml 文件")
+    end
+
+    fork_wait_to_download
+  end
+
+  def fork_wait_to_download
+    fork do
+      wait_for_openclash(Time.now.to_i, 6 * 60)
+    end
+  end
+
+  def wait_for_openclash(start_time, max_runtime)
+    loop do
+      # 检查是否超过最大运行时间
+      current_time = Time.now.to_i
+      elapsed_time = current_time - start_time
+      if elapsed_time >= max_runtime
+        log_err("--------------- 异步下载任务达到最大运行时间 (#{max_runtime} s)，不再尝试 ---------------")
+        break
+      end
+
+      files_count = `ls /tmp/yaml_* 2>/dev/null | wc -l`.strip.to_i
+      # 由于clash启动失败后也会删除上述文件，所以需要同时检测 clash core 以及 openclash_watchdog.sh 脚本是否已经正常加载并启动
+      # /etc/init.d/openclash stop 函数
+      clash_core_started = `pidof clash | sed 's/$//g' | wc -l`.strip.to_i
+      # /usr/share/openclash/openclash_ps.sh unify_ps_status
+      watchdog_started = `ps -efw | grep -v grep | grep -c "openclash_watchdog.sh"`.strip.to_i
+      if files_count > 0 || clash_core_started < 1 || watchdog_started < 1
+        log("openclash 服务未完成启动，等待5秒后重试......")
+        sleep 5
+      else
+        sleep 2
+
+        log("openclash 服务已经启动开始下载和替换流程...")
+        DownloadRules.new.download(false)
+        log("异步执行下载和替换逻辑完成，准备退出...")
+        break
+      end
+    end
+  end
 end
 
 
@@ -215,30 +272,3 @@ class ExecHttpRequest
   end
 
 end
-
-class RefreshRules
-
-  def initialize
-    @ip_addr = `uci -q get network.lan.ipaddr`.strip
-    @cn_port = `uci -q get openclash.config.cn_port`.strip.to_i
-    @dashboard_password = `uci -q get openclash.config.dashboard_password`.strip
-    @base_refresh_url = "http://#{@ip_addr}:#{@cn_port}/providers/rules/"
-    @base_dashboard_auth_token = "Bearer #{@dashboard_password}"
-    @urls_to_be_refreshed = [
-      "#{@base_refresh_url}my-proxy", #
-      "#{@base_refresh_url}my-direct",
-      "#{@base_refresh_url}my-reject",
-      "#{@base_refresh_url}reject",
-      "#{@base_refresh_url}cncidr"
-    ]
-  end
-
-  def refresh
-    exec_http_request = ExecHttpRequest.new
-    @urls_to_be_refreshed.each do |url|
-      exec_http_request.exec_http_request(url, file_dir: nil, method: 'PUT', use_ssl: false)
-    end
-  end
-end
-
-# DownloadRules.new.download

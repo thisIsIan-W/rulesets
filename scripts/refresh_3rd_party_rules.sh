@@ -19,6 +19,11 @@ URLS_TO_BE_REFRESHED=(
 )
 
 logger() {
+    file_size=$(du -b "$BASE_LOG_FILE" | cut -f1)
+    if [ "$file_size" -ge 102400 ]; then
+        echo '' >$BASE_LOG_FILE
+    fi
+
     echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$BASE_LOG_FILE
     echo -e "$(date +'%Y-%m-%d %H:%M:%S') $*" >>$OPENCLASH_LOG_FILE
 }

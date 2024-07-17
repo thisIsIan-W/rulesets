@@ -3,10 +3,7 @@
   "rules": [
     {
       "domain_keyword": [
-        "dmbj",
-        "apple",
-        "icloud",
-        "itunes"
+        "dmbj"
       ],
       "domain_suffix": [
         "steam-chat.com",

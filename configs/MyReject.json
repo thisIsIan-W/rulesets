@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "domain_suffix": [
+        "ad-feeds.com",
+        "api.miwifi.com",
+        "pangolin-sdk-toutiao.com",
+        "ulogs.umeng.com",
+        "errnewlog.umeng.com"
+      ]
+    }
+  ]
+}

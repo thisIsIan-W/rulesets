@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "domain_keyword": [
+        "dmbj",
+        "apple",
+        "icloud",
+        "itunes"
+      ],
+      "domain_suffix": [
+        "steam-chat.com",
+        "steamcontent.com",
+        "steamstatic.com",
+        "steamserver.net",
+        "test.steampowered.com",
+        "api.steampowered.com",
+        "steamstore-a.akamaihd.net",
+        "api.epicgames.dev",
+        
+        "day.app",
+        "greasyfork.org",
+        "tampermonkey.net",
+        "userscript.zone",
+        "openuserjs.org",
+        "ntp.org",
+        "time.windows.com",
+        "time.ubuntu.com",
+        "4006510600.com",
+        "srip.net",
+        "mvnrepository.org",
+        "gupaoedu.com",
+        "gceasy.io",
+        "codeleak.pl",
+        "buke999.com",
+        "52jbj.com",
+        "dircleaner.com",
+        "internetdownloadmanager.com",
+        "virtualearth.net",
+        "appcenter.ms",
+        "rmbgame.net",
+        "duowan.com",
+        "duowan998.com",
+        "parsec.app",
+        "steampy.com",
+        "my-kof.com",
+        "allhistory.com",
+        "hfdongfang.com",
+        "pdfdo.com",
+        "fastthread.io",
+        "patorjk.com",
+        "pwypyq.com",
+        "bewildcard.com"
+      ]
+    }
+  ]
+}

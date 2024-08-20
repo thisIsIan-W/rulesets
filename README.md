@@ -6,7 +6,7 @@ This project exists to provide an additional option to address this concern.
 
 <br/>
 <br/>
-<br/>
+
 ## Instruction
 * Download all scripts from the /scripts folder and import them into the `/etc/openclash/rule_provider/scripts` directory.
 * Use `chmod +x` to grant execution permissions to all scripts.

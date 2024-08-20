@@ -5,7 +5,6 @@ There are numerous third-party rule sets available online, but many lack the 'no
 This project exists to provide an additional option to address this concern.
 
 <br/>
-<br/>
 
 ## Instruction
 * Download all scripts from the /scripts folder and import them into the `/etc/openclash/rule_provider/scripts` directory.

@@ -2,11 +2,16 @@
   "version": 1,
   "rules": [
     {
+      "domain": [
+        "img-s-msn-com.akamaized.net"
+      ],
       "domain_suffix": [
-        "copilot.microsoft.com"
+        "msn.com",
+        "live.com",
+        "msfauth.net",
+        "azureedge.net"
       ],
       "domain_keyword": [
-        "cloudflare",
         "anthropic",
         "claude",
         "bing"
